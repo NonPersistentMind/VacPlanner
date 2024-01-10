@@ -4,7 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>React App</title>
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nonpersistentmind.github.io/VacPlanner/">
+    <meta property="og:title" content="Your VacBoard">
+    <meta property="og:description" content="Безпека, підкріплена знаннями: рекомендації для здорового завтра">
+    <!-- <meta property="og:description" content="Science guiding you: recommendations for a healthy tomorrow"> -->
+    <meta property="og:image" content="https://i.ibb.co/Xy0hGwm/Designer.jpg">
+
+    <title>The VacBoard</title>
+    <link rel="icon" type="image/png" href="https://i.ibb.co/yVWYkQs/Vaccination-Planner-Logoby-Designer-Cropped.png">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <script src="https://unpkg.com/css-doodle@0.37.3/css-doodle.min.js"></script>
     <style>
@@ -229,10 +238,12 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 2;
-            width: 8vmin;
-            height: 8vmin;
+            z-index: 0;
+            width: 10vmin;
+            height: 10vmin;
             border-radius: 50%;
+            opacity: 1;
+            transition: all 0.5s ease-in-out;
         }
 
         #section-3 #vaccine-name-holder span {
@@ -240,10 +251,15 @@
             top: 80%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.9rem;
+            font-size: 0.84rem;
             font-weight: bold;
             color: white;
             text-align: center;
+        }
+
+        #section-3 #vaccine-name-holder.hidden {
+            top: 75%;
+            opacity: 0;
         }
 
         #section-3 #search-container {
@@ -1300,10 +1316,10 @@
                         <nav className="level is-justify-content-center has-text-light is-mobile mb-5 pb-5">
                             <div className="level-item has-text-centered">
                                 <div>
-                                    <p className="heading mb-3">Залишки, прозвітовані більше, ніж 7 днів тому</p>
+                                    <p className="title is-5 has-text-light mb-3">Залишки, прозвітовані більше, ніж 7 днів тому</p>
                                     {
                                         this.state.timed_out_reports.index.map((el, i) => {
-                                            return (<p key={i} className="title is-6 has-text-light mb-2">{el} – {this.state.timed_out_reports.data[i][0].toLocaleString()} ({this.state.timed_out_reports.data[i][1]} закладів)
+                                            return (<p key={i} className="heading is-6 has-text-light mb-2">{el} – {this.state.timed_out_reports.data[i][0].toLocaleString()} ({this.state.timed_out_reports.data[i][1]} закладів)
                                             </p>);
                                         })
                                     }
@@ -1320,6 +1336,13 @@
 
         <div className="column is-4 has-text-centered">
             <div>
+                <p className="title is-5 has-text-light mb-5">ІПВ</p>
+                <p className="heading is-5 has-text-light">Донецька, Миколаївська, Сумська, Тернопільська, Херсонська, Черкаська, Чернігівська</p>
+            </div>
+        </div>
+        
+        <div className="column is-4 has-text-centered">
+            <div>
                 <p className="title is-5 has-text-light mb-5">АДП</p>
                 <p className="heading is-5 has-text-light">Донецька, Миколаївська, Херсонська</p>
             </div>
@@ -1327,8 +1350,22 @@
         
         <div className="column is-4 has-text-centered">
             <div>
+                <p className="title is-5 has-text-light mb-5">АДП-М</p>
+                <p className="heading is-5 has-text-light">Донецька, Кіровоградська, Миколаївська, Херсонська, Чернівецька, Чернігівська</p>
+            </div>
+        </div>
+        
+        <div className="column is-4 has-text-centered">
+            <div>
                 <p className="title is-5 has-text-light mb-5">АКДП</p>
                 <p className="heading is-5 has-text-light">Донецька, Запорізька, Тернопільська, Херсонська, Чернігівська</p>
+            </div>
+        </div>
+        
+        <div className="column is-4 has-text-centered">
+            <div>
+                <p className="title is-5 has-text-light mb-5">БЦЖ</p>
+                <p className="heading is-5 has-text-light">Донецька, Запорізька, Кіровоградська, Миколаївська, Тернопільська, Херсонська, Чернігівська</p>
             </div>
         </div>
         
@@ -1425,6 +1462,10 @@
         }
 
         class InstitutionalChartSectionComponent extends React.Component {
+            state = {
+                vaccinePicked: null,
+            }
+
             handleSearch = (value) => {
                 let dataFound = this.props.data.filter(el => el.Rgn.toLowerCase().includes(value.toLowerCase()));
                 if (dataFound.length > 0) {
@@ -1458,7 +1499,7 @@
                     <section id="section-3" className="hero is-fullheight">
 
                         <div id="chart-container">
-                            <div id="vaccine-name-holder">
+                            <div id="vaccine-name-holder" className={this.state.vaccinePicked ? "" : "hidden"}>
                                 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" fill="#000000">
                                     <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                                     <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
@@ -1483,7 +1524,7 @@
                                         </g> 
                                     </g>
                                 </svg>
-                                <span>БЦЖ</span>
+                                <span>{this.state.vaccinePicked}</span>
                             </div>
                             <div className="chart" id="section-3-chart">
                             </div>
@@ -1608,7 +1649,7 @@
                             },
                             {
                                 label: {
-                                    show: false, // Hide labels for the rest levels
+                                    show: true, // Hide labels for the rest levels
                                     color: 'transparent',
                                     /*
                                     rotate: 'tangential',
@@ -1621,7 +1662,7 @@
                             },
                             {
                                 label: {
-                                    show: false, // Hide labels for the rest levels
+                                    show: true, // Hide labels for the rest levels
                                     color: 'transparent',
 
                                     /*
@@ -1663,6 +1704,7 @@
 
                 chart.setOption(option);
 
+                const chartCompontent = this;
                 let last_leaf = undefined;
                 let prev_element = undefined;
                 chart.on('click', function (params) {
@@ -1676,6 +1718,7 @@
                             last_leaf.children = last_leaf.hidden_children;
                         }
                         chart.setOption({});
+                        chartCompontent.setState({vaccinePicked: params.treePathInfo.at(-2).name})
                         chart.dispatchAction({
                             type: 'sunburstRootToNode',
                             targetNode: params.treePathInfo.at(-2).name + '_' + params.treePathInfo.at(-1).name
@@ -1692,6 +1735,7 @@
                     // Clicked on vaccine
                     else if ( (params.data.children[0].hidden_children) ){
                         prev_element = {name: "Загальна кількість залишків", type: 'root'};
+                        chartCompontent.setState({vaccinePicked: params.treePathInfo.at(-1).name})
                         chart.dispatchAction({
                             type: 'sunburstRootToNode',
                             targetNode: params.treePathInfo.at(-1).name
@@ -1700,8 +1744,8 @@
                     // Clicked on the root
                     else {
                         (!prev_element || prev_element.type !== 'region') && last_leaf && delete last_leaf.children;
+                        (!prev_element || prev_element.type == 'root') && chartCompontent.setState({vaccinePicked: null});
                         chart.setOption({});
-
                         chart.dispatchAction({
                             type: 'sunburstRootToNode',
                             targetNode: prev_element ? prev_element.name : 'Загальна кількість залишків'

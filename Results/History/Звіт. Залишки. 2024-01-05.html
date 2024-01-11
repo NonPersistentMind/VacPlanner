@@ -1227,23 +1227,6 @@
                 }
             }
             render() {
-                /*
-                let data = Object.keys(this.props.dataWithUsage).reduce((regionAcc, region, i) => {
-                    let regionalData = this.props.dataWithUsage[region];
-                    let coverage = regionalData.columns.reduce((vaccineAcc, vaccine, i) => {
-                        // Calculate the difference in month between two dates (index dates and report date)
-                        let index = regionalData.data[i].findIndex(el => el == 0);
-                        let coverageInMonth = monthInterval(REPORT_DATE, new Date(regionalData.index[index]));
-
-                        vaccineAcc[vaccine] = coverageInMonth;
-                        return vaccineAcc;
-                    }, {});
-                    regionAcc[region] = coverage;
-                    return regionAcc;
-                }, {});
-                */
-                clg(this.props.dataWithUsage);
-
                 let data = Object.keys(this.props.dataWithUsage).map(region => {
                     if (region === 'Україна'){
                         return null;
@@ -2351,6 +2334,8 @@
                 this.setState({ toggleMap: !this.state.toggleMap });
             }
 
+            
+
             /*
             Depending on if the usage is includded,  different sections are rendered:
             • USAGE INCLUDED
@@ -2368,10 +2353,38 @@
 
             • USAGE NOT INCLUDED
                 1. Show the total amount of leftovers by each year of expiration
-                2. Show the percentage of selectedRegion (or Ukraine) population that can be vaccinated with the leftovers, by vaccine
-                3. 
+                2. Show the usage of each vaccine in selectedRegion
+                3. Show the trends of usage of each vaccine in selectedRegion
             */
             render() {
+                const PHRASES = [
+                    (region) => <React.Fragment>А хто це в нас такий молодець, у якого нічого не псується?<br/>Так це ж {region}!</React.Fragment>,
+                    (region) => <React.Fragment>Ну дивись, хто тут без проблем!<br/>Це ж {region}!</React.Fragment>,
+                    (region) => <React.Fragment>О, які ми молодці!<br/>А хто точно молодець? {region} молодець!</React.Fragment>,
+                    (region) => <React.Fragment>А ось і зірка!<br/>Ей, {region}, йди шипну на вушко: ти просто супер!</React.Fragment>,
+                    (region) => <React.Fragment>Хто тут без проблем?<br/>Так це ж {region}!</React.Fragment>,
+                    (region) => <React.Fragment>Ура!<br/>А {region} таки вміє показати як вживати вакцину!</React.Fragment>,
+                    (region) => <React.Fragment>Ого, {region}!<br/>Так у вас же все просто бімба!</React.Fragment>,
+                    (region) => <React.Fragment>Вітаємо, {region}!<br/>Вакцина у вас не псується, аж око радіє!</React.Fragment>,
+                    (region) => <React.Fragment>Так тримати, {region}!<br/>У вас усе гаразд!</React.Fragment>,
+                    (region) => <React.Fragment>Хто тут найкращий?<br/>Безумовно, {region}!</React.Fragment>,
+                    (region) => <React.Fragment>Усім би бути як {region}!<br/>У вас там усе бомбезно!</React.Fragment>,
+                    (region) => <React.Fragment>Ось хто точно знає, як треба працювати!<br/>Це ж {region}!</React.Fragment>,
+                    (region) => <React.Fragment>А ось і наш чемпіон!<br/>Так-так, {region}, ви просто супер!</React.Fragment>,
+                    (region) => <React.Fragment>Хто тут без проблем?<br/>Так це ж {region}!</React.Fragment>,
+                    (region) => <React.Fragment>Ура, {region}!<br/>У вас все просто космос!</React.Fragment>,
+                    (region) => <React.Fragment>Вітаємо, {region}!<br/>У вас немає проблем!</React.Fragment>,
+                    (region) => <React.Fragment>Уау, {region}!<br/>Вакцина не псується – то й ЦГЗ сміється!</React.Fragment>,
+                ];
+                const replacement = this.props.selectedRegion == "м. Київ" ? 
+                    (<span>наш <b className="has-text-success">Київ</b></span>) :
+                    (this.props.selectedRegion == "Україна" ? 
+                        (<b className="has-text-success">вся Українонька</b>) :
+                        (<span>наша <b className="has-text-success">{this.props.selectedRegion} область</b></span>)
+                    )
+                let phrase = PHRASES[Math.floor(Math.random() * PHRASES.length)](replacement);
+                clg(phrase);
+
                 let defaultOption = Object.assign({}, globalOption);
                 Object.assign(defaultOption, {
                     textStyle: {
@@ -2504,14 +2517,8 @@
                                                             🤩
                                                         </p>
                                                         <p className="title is-4 has-text-centered mb-0 has-text-light">
-                                                            А хто це в нас такий молодець, у якого нічого не псується?
-                                                            <br />
-                                                            Так це ж {
-                                                                this.props.selectedRegion == "м. Київ"
-                                                                    ? (<span>наш <b className="has-text-success">Київ</b></span>) :
-                                                                    (this.props.selectedRegion == "Україна"
-                                                                        ? (<b className="has-text-success">вся Українонька</b>) :
-                                                                        (<span>наша <b className="has-text-success">{this.props.selectedRegion} область</b>!</span>))
+                                                            {
+                                                                phrase
                                                             }
                                                         </p>
                                                         <p className="huge-font has-text-centered">

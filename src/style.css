@@ -1,0 +1,811 @@
+/* Add root color */
+:root {
+    --color: #181c26;
+    --has-text-black:	hsl(0, 0%, 0%);
+    --has-text-black-bis:	hsl(0, 0%, 7%);
+    --has-text-black-ter:	hsl(0, 0%, 14%);
+    --has-text-grey-darker:	hsl(0, 0%, 21%);
+    --has-text-grey-dark:	hsl(0, 0%, 29%);
+    --has-text-grey:	hsl(0, 0%, 48%);
+    --has-text-grey-light:	hsl(0, 0%, 71%);
+    --has-text-grey-lighter:	hsl(0, 0%, 86%);
+    --has-text-white-ter:	hsl(0, 0%, 96%);
+    --has-text-white-bis:	hsl(0, 0%, 98%);
+    --has-text-white:	hsl(0, 0%, 100%);
+}
+
+/* Set bigger font for TV size screens */
+@media screen and (min-width: 2560px) {
+    html {
+        font-size: 24px;
+    }
+}
+
+html {
+    scroll-snap-type: y mandatory;
+    background-color: black;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+}
+
+section {
+    min-height: 600px;
+    position: relative;
+    scroll-snap-align: start;
+    z-index: 1;
+}
+
+.hero>.chart {
+    height: 100vh;
+    width: 100vw;
+    position: absolute;
+    top: 0%;
+}
+
+.hero>img {
+    height: 100vh;
+    width: 100vw;
+    position: absolute;
+    object-fit: scale-down;
+    top: 0%;
+    left: 0%;
+    background-color: rgba(0, 0, 0, 1);
+}
+
+#head {
+    background-color: color(srgb 0.8962 0.9062 0.9018);
+    z-index: 0;
+}
+
+#head div {
+    z-index: 1;
+}
+
+#head img {
+    z-index: 0;
+}
+
+#head>img {
+    background-color: transparent;
+
+    width: 20vmin;
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#head>.hero-body>img {
+    width: 30vmin;
+    min-width: 350px;
+
+    transform: translate(-50%, 0);
+    bottom: 15px;
+    left: 50%;
+    position: absolute;
+    border-radius: 50%;
+
+    object-fit: scale-down;
+}
+
+#head>.hero-body>.logo-holder {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: 35vw;
+}
+
+#head>.hero-body>.logo-holder>img {
+    width: 15vmax;
+    object-fit: scale-down;
+}
+
+#head #mhu-logo {
+    width: 10.5vmax;
+}
+
+#section-2 {
+    /*
+    background: linear-gradient(to bottom, black 0%, black 50%, #1F2632 50%, #1F2632 100%);
+    */
+    background-color: black;
+    height: 100vh;
+}
+
+#section-2>.background {
+    position: absolute;
+    z-index: 0;
+    height: 100%;
+    width: 100%;
+
+
+    --top: radial-gradient(calc(10px + 65px) at 50% calc(100% + 10px),#0000 98%,#000);
+    -webkit-mask: var(--top);
+            mask: var(--top);
+}
+
+#section-2 .top {
+    height: 50%;
+    width: 100%;
+}
+
+#section-2 .bottom {
+    height: 65%;
+    width: 100%;
+
+    background: radial-gradient(ellipse 100% 100% at bottom 0% left 50%, #4a7081 0%, #10171e 100%);
+
+    --mask:
+        radial-gradient(117.15px at 50% 165.00px, #000 99%, #0000 101%) calc(50% - 150px) 0/300px 100%,
+        radial-gradient(117.15px at 50% -90px, #0000 99%, #000 101%) 50% 75px/300px 100% repeat-x;
+    -webkit-mask: var(--mask);
+    mask: var(--mask);
+
+    z-index: 2;
+
+}
+
+#section-2>.level {
+    z-index: 1;
+
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+#section-2>.level>.level-item:not(.full-width) {
+    max-width: 20%;
+}
+
+#section-2>.level>.level-item.full-width {
+    flex-shrink: 1;
+}
+
+#institutional-section{
+    width: 100%;
+}
+
+#institutional-section .gradient-background {
+    --bottom: 
+     linear-gradient(#000 0 0) bottom/100% calc(100% - 65px) no-repeat,
+     radial-gradient(farthest-side,#000 98%,#0000) top/130px 130px no-repeat;
+    -webkit-mask: var(--bottom);
+            mask: var(--bottom);
+    margin-top: -55px;
+
+    z-index:1;
+    position: absolute; 
+
+    width: 100vw;
+    min-height: 250vh;
+
+    background: rgb(65,44,59);
+    background: radial-gradient(circle, rgba(65,44,59,1) 0%, rgb(22 23 34) 100%);
+}
+
+/*
+#section-3 .chart {
+    -moz-backdrop-filter: brightness(90%) blur(40px);
+    -webkit-backdrop-filter: brightness(90%) blur(40px);
+    backdrop-filter: brightness(90%) blur(40px);
+}
+*/
+#section-3 {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    width: 100%;
+}
+
+#chart-container{
+    height: 100vh;
+    width: 69%;
+}
+
+#chart-container .chart {
+    height: 100%;
+    width: 100%;
+}
+
+#chart-container {
+    position: relative;
+}
+
+#section-3 #vaccine-name-holder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    width: 10vmin;
+    height: 10vmin;
+    border-radius: 50%;
+    opacity: 1;
+    transition: all 0.5s ease-in-out;
+}
+
+#section-3 #vaccine-name-holder span {
+    position: absolute;
+    top: 80%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.84rem;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+}
+
+#section-3 #vaccine-name-holder.hidden {
+    top: 75%;
+    opacity: 0;
+}
+
+#section-3 #search-container {
+    width: 25%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: start;
+}
+
+#section-3 #search-container .message.search-result {
+    border-radius: 10px;
+}
+#section-3 #search-container .message.search-result .message-header {
+    border-radius: 10px 10px 0 0;
+    background: none;
+    color: inherit;
+}
+#section-3 #search-contaner .message.search-result .message-header .success {
+    color: #11998e;
+}
+#section-3 #search-contaner .message.search-result .message-header .failure {
+    color: #84442d;
+}
+#section-3 #search-contaner .message.search-result .message-header .warning {
+    color: #c89917;
+}
+
+#section-3 #search-container .form__group {
+    position: relative;
+    padding: 15px 0 0;
+    margin-top: 10px;
+    width: 100%;
+}
+
+#section-3 #search-container .form__field {
+    font-family: inherit;
+    width: 100%;
+    border: 0;
+    border-bottom: 2px solid #9b9b9b;
+    outline: 0;
+    font-size: 1.3rem;
+    color: #fff;
+    padding: 7px 0;
+    background: transparent;
+    transition: border-color 0.2s;
+}
+#section-3 #search-container .form__field::placeholder {
+    color: transparent;
+}
+#section-3 #search-container .form__field:placeholder-shown ~ .form__label {
+    font-size: 1.3rem;
+    cursor: text;
+    top: 20px;
+}
+
+#section-3 #search-container .form__label {
+    position: absolute;
+    top: 0;
+    display: block;
+    transition: 0.2s;
+    font-size: 1rem;
+    color: #9b9b9b;
+}
+
+#section-3 #search-container .form__field:focus {
+    padding-bottom: 6px;
+    font-weight: 700;
+    border-width: 3px;
+    border-image: linear-gradient(to right, #11998e, #38ef7d);
+    border-image-slice: 1;
+}
+#section-3 #search-container .form__field:focus ~ .form__label {
+    position: absolute;
+    top: 0;
+    display: block;
+    transition: 0.2s;
+    font-size: 1rem;
+    color: #11998e;
+    font-weight: 700;
+}
+
+/* reset input */
+#section-3 #search-container .form__field:required, .form__field:invalid {
+    box-shadow: none;
+}
+
+#section-4>.right {
+    border-top-left-radius: 25px;
+    border-bottom-left-radius: 25px;
+}
+
+#section-4 .dropdown .button {
+    width: 225px;
+    height: 50px;
+
+    font-size: 1.08rem;
+    font-family: monospace;
+
+    color: hsl(0, 0%, 4%);
+    background: linear-gradient(145deg, rgb(173, 203, 255), rgb(136, 255, 202));
+    border: 1px solid black;
+}
+#section-4 .dropdown .dropdown-content {
+    text-align: center;
+    background-color: hsl(0, 0%, 96%);
+    cursor: pointer;
+}
+#section-4 .dropdown .dropdown-item {
+    color: hsl(0, 0%, 4%);
+    width: 225px;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+#leftovers-section {
+    background: radial-gradient(ellipse 70% 50% at top 0% right 50%, #25383a 0%, #1d2528 100%);
+    z-index: 3;
+    position: relative;
+    padding-right:10px;
+}
+
+#leftovers-section .box {
+    background: linear-gradient(180deg, rgb(20 28 32) 0%, rgb(33 44 48) 100%);
+}
+
+#leftovers-section .box.map {
+    background: radial-gradient(circle at top 0% right 50%, rgb(45 55 60) 0%, rgb(11 19 23) 100%);
+}
+
+#section-5 {
+    z-index: 2;
+    max-height: 100vh;
+}
+
+#section-5 .two-section-container {
+    height: calc(100vh + 45px);
+    z-index: 2;
+    pointer-events: none;
+}
+
+#section-5 .usage-includer {
+    z-index: 3;
+}
+
+#section-5 .region-selector {
+    z-index: 3;
+}
+
+#section-5 .dropdown .button {
+    width: 14rem;
+    padding: 0.8rem 0;
+
+    font-size: 1.05rem;
+    font-family: monospace;
+
+    border-top-right-radius: 0;
+    border-top-left-radius: 0;
+
+    color: hsl(0, 0%, 96%);
+    background: rgb(146, 61, 61);
+    border: 1px solid transparent;
+}
+#section-5 .dropdown .dropdown-content {
+    text-align: center;
+    background-color: hsl(0, 0%, 96%);
+    cursor: pointer;
+}
+#section-5 .dropdown .dropdown-item {
+    color: hsl(0, 0%, 4%);
+    width: 14rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+#section-6 .avoid-dropdown {
+    margin-top: 2.65rem;
+}
+
+#section-6 .column.red>.column {
+    padding: 15px 0;
+}
+
+#section-6 .red {
+    background: rgb(146, 61, 61);
+    /* color: hsl(0 0% 96% / 1); */
+}
+
+#section-6 .red p {
+    color: hsl(0, 0%, 96%);
+}
+
+#section-6 .report-layer {
+    min-height: 15vh;
+    margin-top: 2rem;
+}
+
+#section-6 .report-layer div .column p.title{
+    margin-bottom: 10px;
+}
+
+#section-6 .chart {
+    height: 100%;
+    width: 100%;
+}
+
+#section-6 .expandable {
+    transition-property: width;
+    transition-duration: 0.5s;
+}
+
+#section-6 .triple-chart {
+    overflow-x: hidden;
+    background: radial-gradient(circle at top 0% right 50%, rgb(45 55 60) 0%, rgb(11 19 23) 100%);
+}
+
+#section-6 .triple-chart::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+#section-6 .triple-chart .columns {
+    height: 100%;
+    max-height: 43vh;
+}
+
+#section-6 .triple-chart .columns .column {
+    flex-shrink: 25;
+    flex-basis: 80%;
+    overflow: hidden;
+
+    position: relative;
+    transition: all 0.5s ease-in-out;
+}
+
+#section-6 .triple-chart .columns .column.active {
+    flex-shrink: 1;
+}
+
+#section-6 .triple-chart .columns .column:not(.active) {
+    filter:brightness(0.3);
+}
+
+#section-6 .triple-chart .columns .column p {
+    position: absolute;
+    text-align: center;
+    left: 20px;
+    top: 45%;
+    transform: rotate(90deg) translateX(-50%);
+    font-size: 28px;
+    
+    width: 300px;
+
+    transform-origin: left bottom;
+    transition: all 0.5s ease-in-out;
+}
+
+#section-6 .triple-chart .columns .column.active p {
+    text-align: left;
+    left: 25px;
+    top: 10px;
+    font-size: 16.5px;
+    transform: rotate(0deg);
+}
+
+#section-6 .triple-chart .columns .column .chart{
+    width: calc(0.75 * var(--grandparent-width));
+}
+
+#coverageChartContainer {
+    height: 100%;
+    width: 100%;
+}
+
+#vaccineDropdown {
+    z-index: 1;
+    position: absolute;
+    top: 70px;
+    right: 40px;
+}
+
+#vaccineDropdown .dropdown__container {
+    position: relative;
+    width: 270px;
+    filter: url(#goo);
+}
+
+#vaccineDropdown .dropdown__face, #vaccineDropdown .dropdown__items {
+background-color: #fff;
+padding: 20px;
+border-radius: 25px;
+}
+#vaccineDropdown .dropdown__face {
+display: block;
+position: relative;
+}
+#vaccineDropdown .dropdown__items {
+margin: 0;
+position: absolute;
+right: 0;
+top: 50%;
+width: 100%;
+list-style: none;
+list-style-type: none;
+display: flex;
+flex-wrap: wrap;
+justify-content: space-between;
+visibility: hidden;
+z-index: -1;
+opacity: 0;
+transition: all 0.4s cubic-bezier(0.93, 0.88, 0.1, 0.8);
+}
+#vaccineDropdown .dropdown__items::before {
+content: "";
+background-color: #fff;
+position: absolute;
+bottom: 100%;
+right: 20%;
+height: 40px;
+width: 20px;
+}
+#vaccineDropdown .dropdown__arrow {
+border-bottom: 2px solid #000;
+border-right: 2px solid #000;
+position: absolute;
+top: 50%;
+right: 30px;
+width: 10px;
+height: 10px;
+transform: rotate(45deg) translateY(-50%);
+transform-origin: right;
+}
+#vaccineDropdown .dropdown__container input {
+display: none;
+}
+#vaccineDropdown .dropdown__container input:checked ~ .dropdown__items {
+top: calc(100% + 25px);
+visibility: visible;
+opacity: 1;
+}
+
+#vaccineDropdown * {
+    box-sizing: border-box;
+}
+
+#vaccineDropdown svg {
+    display: none;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    margin-left: 10px
+}
+
+.checkbox-wrapper>p {
+    margin-left: 5px;
+    font-family: monospace;
+    font-size: 1rem;
+    color: hsl(0, 0%, 4%);
+    cursor: pointer;
+}
+
+.checkbox-wrapper *,
+.checkbox-wrapper *::before,
+.checkbox-wrapper *::after {
+    box-sizing: border-box;
+}
+
+.checkbox-wrapper .plus-minus {
+    --primary: #1d2528;
+    --secondary: #FAFBFF;
+    --duration: .5s;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    mask-image: radial-gradient(white, black);;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    perspective: 240px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    border: 4px solid var(--primary);
+    background-size: 300% 300%;
+    transition: transform 0.3s;
+    transform: scale(var(--scale, 1)) translateZ(0);
+    -webkit-animation: var(--name, unchecked) var(--duration) ease forwards;
+            animation: var(--name, unchecked) var(--duration) ease forwards;
+    margin: 0;
+}
+.checkbox-wrapper .plus-minus::before,
+.checkbox-wrapper .plus-minus::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: var(--height, 16px);
+    left: 6px;
+    top: var(--top, 6px);
+    background: var(--background, var(--primary));
+    -webkit-animation: var(--name-icon-b, var(--name-icon, unchecked-icon)) var(--duration) ease forwards;
+            animation: var(--name-icon-b, var(--name-icon, unchecked-icon)) var(--duration) ease forwards;
+}
+.checkbox-wrapper .plus-minus::before {
+    -webkit-clip-path: polygon(0 6px, 6px 6px, 6px 0, 10px 0, 10px 6px, 16px 6px, 16px 10px, 10px 10px, 10px 16px, 6px 16px, 6px 10px, 0 10px);
+            clip-path: polygon(0 6px, 6px 6px, 6px 0, 10px 0, 10px 6px, 16px 6px, 16px 10px, 10px 10px, 10px 16px, 6px 16px, 6px 10px, 0 10px);
+}
+.checkbox-wrapper .plus-minus::after {
+    --height: 4px;
+    --top: 12px;
+    --background: var(--secondary);
+    --name-icon-b: var(--name-icon-a, checked-icon);
+}
+.checkbox-wrapper .plus-minus:active {
+    --scale: .95;
+}
+.checkbox-wrapper .plus-minus:checked {
+    --name: checked;
+    --name-icon-b: checked-icon;
+    --name-icon-a: unchecked-icon;
+}
+
+@-webkit-keyframes checked-icon {
+    from {
+    transform: translateZ(12px);
+    }
+    to {
+    transform: translateX(16px) rotateY(90deg) translateZ(12px);
+    }
+}
+@keyframes checked-icon {
+    from {
+    transform: translateZ(12px);
+    }
+    to {
+    transform: translateX(16px) rotateY(90deg) translateZ(12px);
+    }
+}
+
+@-webkit-keyframes unchecked-icon {
+    from {
+    transform: translateX(-16px) rotateY(-90deg) translateZ(12px);
+    }
+    to {
+    transform: translateZ(12px);
+    }
+}
+@keyframes unchecked-icon {
+    from {
+    transform: translateX(-16px) rotateY(-90deg) translateZ(12px);
+    }
+    to {
+    transform: translateZ(12px);
+    }
+}
+
+@-webkit-keyframes checked {
+    from {
+    background-image: radial-gradient(ellipse at center, var(--primary) 0%, var(--primary) 25%, var(--secondary) 25.1%, var(--secondary) 100%);
+    background-position: 100% 50%;
+    }
+    to {
+    background-image: radial-gradient(ellipse at center, var(--primary) 0%, var(--primary) 25%, var(--secondary) 25.1%, var(--secondary) 100%);
+    background-position: 50% 50%;
+    }
+}
+@keyframes checked {
+    from {
+    background-image: radial-gradient(ellipse at center, var(--primary) 0%, var(--primary) 25%, var(--secondary) 25.1%, var(--secondary) 100%);
+    background-position: 100% 50%;
+    }
+    to {
+    background-image: radial-gradient(ellipse at center, var(--primary) 0%, var(--primary) 25%, var(--secondary) 25.1%, var(--secondary) 100%);
+    background-position: 50% 50%;
+    }
+}
+
+@-webkit-keyframes unchecked {
+    from {
+    background-image: radial-gradient(ellipse at center, var(--secondary) 0%, var(--secondary) 25%, var(--primary) 25.1%, var(--primary) 100%);
+    background-position: 100% 50%;
+    }
+    to {
+    background-image: radial-gradient(ellipse at center, var(--secondary) 0%, var(--secondary) 25%, var(--primary) 25.1%, var(--primary) 100%);
+    background-position: 50% 50%;
+    }
+}
+@keyframes unchecked {
+    from {
+    background-image: radial-gradient(ellipse at center, var(--secondary) 0%, var(--secondary) 25%, var(--primary) 25.1%, var(--primary) 100%);
+    background-position: 100% 50%;
+    }
+    to {
+    background-image: radial-gradient(ellipse at center, var(--secondary) 0%, var(--secondary) 25%, var(--primary) 25.1%, var(--primary) 100%);
+    background-position: 50% 50%;
+    }
+}
+
+.black-background {
+    background-color: black !important;
+}
+
+.y-scrollable {
+    overflow-y: auto;
+}
+
+.height-100 {
+    height: 100%;
+}
+
+.huge-font {
+    font-size: 5rem;
+}
+
+.pos-tr {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.pos-tc {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}        
+
+.pos-tl {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.pos-br {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.pos-bl {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+.sticky {
+    position: sticky;
+    top: 0;
+    pointer-events: all;
+}
+
+.no-padding {
+    padding: 0 !important;
+}
+
+.is-relative {
+    position: relative !important;
+}
+
+.is-hidden {
+    display: none !important;
+}

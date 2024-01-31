@@ -8,7 +8,7 @@ module.exports = {
   // Output file for the bundled code
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'), // Output directory
+    path: path.resolve(__dirname, 'docs'), // Output directory
   },
   // Loaders for handling different file types
   module: {

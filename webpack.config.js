@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ReactIntlPlugin = require('react-intl-webpack-plugin');
 
 module.exports = {
   // Entry point for Webpack to bundle
@@ -37,6 +38,14 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './src/index.html', // Path to your template
       filename: 'index.html', // Output filename
-    })
+    }),
+    new ReactIntlPlugin({
+      // Specify paths for message extraction
+      extractFrom: ['src/app.js'],
+      // Define destination folder for translation files
+      output: './translations',
+      // Optionally specify supported locales
+      supportedLocales: ['en', 'uk'],
+    }),
   ],
 };

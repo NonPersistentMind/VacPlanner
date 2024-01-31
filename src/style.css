@@ -104,6 +104,10 @@ section {
     object-fit: scale-down;
 }
 
+#head .title-holder {
+    width:65%;
+}
+
 #head #mhu-logo {
     width: 10.5vmax;
 }
@@ -123,7 +127,7 @@ section {
     width: 100%;
 
 
-    --top: radial-gradient(calc(10px + 65px) at 50% calc(100% + 10px),#0000 98%,#000);
+    --top: radial-gradient(calc(5px + 60px) at 50% calc(100% + 5px),#0000 98%,#000);
     -webkit-mask: var(--top);
             mask: var(--top);
 }
@@ -170,8 +174,8 @@ section {
 
 #institutional-section .gradient-background {
     --bottom: 
-     linear-gradient(#000 0 0) bottom/100% calc(100% - 65px) no-repeat,
-     radial-gradient(farthest-side,#000 98%,#0000) top/130px 130px no-repeat;
+    linear-gradient(#000 0 0) bottom/100% calc(100% - 60px) no-repeat,
+    radial-gradient(farthest-side,#000 98%,#0000) top/120px 120px no-repeat;
     -webkit-mask: var(--bottom);
             mask: var(--bottom);
     margin-top: -55px;

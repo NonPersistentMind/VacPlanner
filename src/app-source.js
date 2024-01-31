@@ -1,5 +1,9 @@
-import React from 'react';
+import React, {Component, createContext, useContext} from 'react';
 import ReactDOM from 'react-dom';
+import { IntlProvider, FormattedMessage, IntlContext } from 'react-intl';
+
+import enMessages from '../translations/en/ui.json';
+import ukMessages from '../translations/uk/ui.json';
 import 'bulma/css/bulma.css'; // For Bulma's CSS
 import './style.css'; 
 
@@ -8,6 +12,8 @@ const clg = console.log;
 const REPORT_DATE = new Date("/*{}*/");
 const ukraineTopoJSON = /*{}*/;
 const allVaccines = /*{}*/;
+
+const LanguageContext = createContext();
 
 let vaccineColors = [
     '#ff9074',
@@ -27,18 +33,18 @@ let vaccineColors = [
 ];
 
 let monthMapping = {
-    1: {'uk': 'Січень', 'en': 'January'},
-    2: {'uk': 'Лютий', 'en': 'February'},
-    3: {'uk': 'Березень', 'en': 'March'},
-    4: {'uk': 'Квітень', 'en': 'April'},
-    5: {'uk': 'Травень', 'en': 'May'},
-    6: {'uk': 'Червень', 'en': 'June'},
-    7: {'uk': 'Липень', 'en': 'July'},
-    8: {'uk': 'Серпень', 'en': 'August'},
-    9: {'uk': 'Вересень', 'en': 'September'},
-    10: {'uk': 'Жовтень', 'en': 'October'},
-    11: {'uk': 'Листопад', 'en': 'November'},
-    12: {'uk': 'Грудень', 'en': 'December'}
+    1: 'Січень', 
+    2: 'Лютий', 
+    3: 'Березень', 
+    4: 'Квітень', 
+    5: 'Травень', 
+    6: 'Червень', 
+    7: 'Липень', 
+    8: 'Серпень', 
+    9: 'Вересень', 
+    10: 'Жовтень', 
+    11: 'Листопад', 
+    12: 'Грудень', 
 };
 
 echarts.registerMap('Ukraine', ukraineTopoJSON);
@@ -135,12 +141,20 @@ class HeadSectionComponent extends React.Component {
                         alt="" />
                         <img id="phc-logo" src="https://i.ibb.co/Z12PJJs/logo-cgz.png" alt="logo-cgz" border="0"/>
                     </div>
-                    <div className="has-text-centered pb-5">
+                    <div className="title-holder has-text-centered pb-5">
                         <p className="heading is-size-2 mb-5">
-                            <b>Залишки вакцин для проведення профілактичних щеплень відповідно до Національного календаря</b>
+                            <b>
+                                <FormattedMessage 
+                                    id="translations.head.title" 
+                                    defaultMessage="Залишки вакцин для проведення профілактичних щеплень відповідно до Національного календаря"
+                                />
+                            </b>
                         </p>
                         <p className="title is-size-3">
-                            Звіт станом на {REPORT_DATE.toLocaleDateString("uk-UA")}
+                            <FormattedMessage 
+                                id="translations.head.report-date" 
+                                defaultMessage="Звіт станом на"
+                            /> {REPORT_DATE.toLocaleDateString("uk-UA")}
                         </p>
                     </div>
                     {/*<img src="https://i.ibb.co/313XX6f/Designer-2.jpg" alt="Designer-2" border="0"/>*/}
@@ -153,6 +167,17 @@ class HeadSectionComponent extends React.Component {
 
 
 class RegionalChartSectionComponent extends React.Component {
+    static contextType = IntlContext;
+    state = {
+        vaccines : JSON.parse(
+            '/*{}*/'
+        ),
+        data : JSON.parse(
+            '/*{}*/'
+        ),
+        regions: /*{}*/,
+    }
+
     render() {
         return (
             <section id="section-1" className="hero is-fullheight">
@@ -162,44 +187,12 @@ class RegionalChartSectionComponent extends React.Component {
             </section>
         )
     }
+
     componentDidMount() {
         let regionalChartHolder = document.getElementById('section-1-chart');
-        let chart = echarts.init(regionalChartHolder);
-
-        let vaccines = JSON.parse(
-            '/*{}*/'
-        );
-
-        let data = JSON.parse(
-            '/*{}*/'
-        );
-
-        let series = [];
-        for (let el in data) {
-            series.push({
-                name: el,
-                type: 'bar',
-                stack: 'total',
-                label: {
-                    show: true,
-                    textStyle:{
-                        fontFamily: 'Georgia',
-                        color: 'hsl(0, 0%, 4%)'
-                    }
-                },
-                itemStyle: {
-                    borderRadius: 4,
-                    // borderColor: '#fff',
-                    borderWidth: 2
-                },
-                emphasis: {
-                    focus: 'series'
-                },
-                data: data[el]
-            });
-        }
-
-        let showLegend = true;
+        this.chart = echarts.init(regionalChartHolder);
+        let intl = this.context;
+        let chart = this.chart;
 
         let option = Object.assign({}, globalOption);
         Object.assign(option, {
@@ -220,7 +213,6 @@ class RegionalChartSectionComponent extends React.Component {
             }])),
 
             title: {
-                text: "Залишки вакцин у регіонах",
                 left: '25px',
                 top: '15px',
                 textStyle: {
@@ -235,7 +227,7 @@ class RegionalChartSectionComponent extends React.Component {
                 left: "center",
                 top: "55px",
                 selectedMode: 'multiple',
-                selected: vaccines.reduce((acc, item) => {
+                selected: this.state.vaccines.reduce((acc, item) => {
                     acc[item] = true;
                     return acc;
                 }, {}),
@@ -247,7 +239,7 @@ class RegionalChartSectionComponent extends React.Component {
 
             xAxis: {
                 type: 'category',
-                data: /*{}*/.map(el => el == 'Україна' ? "НацЗалишки" : el),
+                data: this.state.regions.map(el => el == 'Україна' ? "НацЗалишки" : el),
                 axisLabel: {
                     interval: 0,
                     rotate: 55,
@@ -299,54 +291,13 @@ class RegionalChartSectionComponent extends React.Component {
                 bottom: '110px'
             },
 
-            series,
-
-            toolbox: {
-                show: true,
-                top: 15,
-                right: 15,
-                feature: {
-                    saveAsImage: {
-                        show: true,
-                        backgroundColor: 'auto'
-                    },
-                    myRestore: {
-                        show: true,
-                        title: 'Відновити',
-                        // An icon that looks like we are restoring the chart
-                        icon: "path://M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2",
-                        onclick: function () {
-                            chart.setOption({
-                                legend: {
-                                    selected: vaccines.reduce((acc, item) => {
-                                        acc[item] = true;
-                                        return acc;
-                                    }, {}),
-                                }
-                            });
-                        }
-                    },
-                    myTool1: {
-                        show: true,
-                        title: 'Показати/приховати легенду',
-                        icon: 'path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891',
-                        onclick: function () {
-                            showLegend = (showLegend) ? false : true;
-                            chart.setOption({
-                                legend: { show: showLegend }
-                            })
-                        }
-                    },
-                }
-            }
-
         });
 
 
         let lastClickTime = 0;
         let clickTimeout = null;
 
-        chart.on('legendselectchanged', function (params) {
+        this.chart.on('legendselectchanged', function (params) {
             const currentTime = new Date().getTime();
             const timeDiff = currentTime - lastClickTime;
         
@@ -379,12 +330,124 @@ class RegionalChartSectionComponent extends React.Component {
             lastClickTime = currentTime;
         });
 
-        chart.setOption(option);
-        this.props.addNewChart(chart);
+        this.chart.setOption(option);
+        this.props.addNewChart(this.chart);
+    }
+
+    componentDidUpdate() {
+        let chart = this.chart;
+        let intl = this.context;
+        let vaccines = this.state.vaccines.map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
+        let data = Object.keys(this.state.data).reduce((acc, item) => {
+            acc[intl.formatMessage({id:`direct-translation.${item}`, defaultMessage:item})] = this.state.data[item];
+            return acc;
+        }, {});
+        let regions = this.state.regions.map(el => el == 'Україна' ? intl.formatMessage({id:"direct-translation.НацСклади", defaultMessage:"НацСклади"}) : intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
+        
+        let series = [];
+        for (let el in data) {
+            series.push({
+                name: el,
+                type: 'bar',
+                stack: 'total',
+                label: {
+                    show: true,
+                    textStyle:{
+                        fontFamily: 'Georgia',
+                        color: 'hsl(0, 0%, 4%)'
+                    }
+                },
+                itemStyle: {
+                    borderRadius: 4,
+                    // borderColor: '#fff',
+                    borderWidth: 2
+                },
+                emphasis: {
+                    focus: 'series'
+                },
+                data: data[el]
+            });
+        }
+
+        let showLegend = true;
+        this.chart.setOption({
+            title: {
+                text: intl.formatMessage({id:"regional.chart.title", defaultMessage:"Залишки вакцин у регіонах"}),
+            },
+            legend: {
+                type: 'plain',
+                left: "center",
+                top: "55px",
+                selectedMode: 'multiple',
+                selected: vaccines.reduce((acc, item) => {
+                    acc[item] = true;
+                    return acc;
+                }, {}),
+                textStyle: {
+                    fontSize: "15px",
+                    color: '#ccc'
+                }
+            },
+            xAxis: {
+                type: 'category',
+                data: regions,
+                axisLabel: {
+                    interval: 0,
+                    rotate: 55,
+                    textStyle: {
+                        fontFamily: globalOption.textStyle.fontFamily,
+                        fontSize: "12px",
+                    }
+                }
+            },
+            series,
+
+            toolbox: {
+                show: true,
+                top: 15,
+                right: 15,
+                feature: {
+                    saveAsImage: {
+                        show: true,
+                        backgroundColor: 'auto'
+                    },
+                    myRestore: {
+                        show: true,
+                        title: intl.formatMessage({id:'direct-translation.RESTORE', defaultMessage:'Відновити'}),
+                        // An icon that looks like we are restoring the chart
+                        icon: "path://M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2",
+                        onclick: function () {
+                            chart.setOption({
+                                legend: {
+                                    selected: vaccines.reduce((acc, item) => {
+                                        acc[item] = true;
+                                        return acc;
+                                    }, {}),
+                                }
+                            });
+                        }
+                    },
+                    myTool1: {
+                        show: true,
+                        title: intl.formatMessage({id:'direct-translation.SHOW-HIDE-LEGEND', defaultMessage:'Показати/приховати легенду'}),
+                        icon: 'path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891',
+                        onclick: function () {
+                            showLegend = (showLegend) ? false : true;
+                            chart.setOption({
+                                legend: { show: showLegend }
+                            })
+                        }
+                    },
+                }
+            }
+        });
+
     }
 }
 
 class RegionalTextSectionComponent extends React.Component {
+    static contextType = IntlContext;
+
     constructor(props) {
         super(props);
         this.state = {
@@ -392,6 +455,8 @@ class RegionalTextSectionComponent extends React.Component {
         }
     }
     render() {
+        const intl = this.context;
+        const localized_TOP = intl.formatMessage({id: 'direct-translation.TOP', defaultMessage: 'Топ'});
         let data = Object.keys(this.props.dataWithUsage).map(region => {
             if (region === 'Україна'){
                 return null;
@@ -429,27 +494,29 @@ class RegionalTextSectionComponent extends React.Component {
                     <div className="level-item has-text-centered">
                         <div>
                             <p className="title is-4 has-text-light">
-                                Регіональна<br />Інформація:
+                                <FormattedMessage id="regional.text.regional" defaultMessage="Регіональна"/>
+                                <br/>
+                                <FormattedMessage id="regional.text.info" defaultMessage="Інформація"/>:
                             </p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading">Загальна кількість залишків</p>
+                            <p className="heading"><FormattedMessage id="regional.text.overall-leftovers" defaultMessage="Загальна кількість залишків"/></p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading">Найбільша кількість залишків</p>
-                            <p className="title has-text-light">/*{}*/</p>
+                            <p className="heading"><FormattedMessage id="regional.text.most-leftovers-region" defaultMessage="Найбільша кількість залишків"/></p>
+                            <p className="title has-text-light">{intl.formatMessage({id:"direct-translation./*{}*/"})}</p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading">Найменша кількість залишків</p>
-                            <p className="title has-text-light">/*{}*/</p>
+                            <p className="heading"><FormattedMessage id="regional.text.least-leftovers-region" defaultMessage="Найменша кількість залишків"/></p>
+                            <p className="title has-text-light">{intl.formatMessage({id:"direct-translation./*{}*/"})}</p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
@@ -458,28 +525,30 @@ class RegionalTextSectionComponent extends React.Component {
                     <div className="level-item has-text-centered">
                         <div>
                             <p className="title is-4 has-text-light">
-                                Топ <br />Наявних Вакцин:
+                                <FormattedMessage id="regional.text.top" defaultMessage="Топ"/>
+                                <br/>
+                                <FormattedMessage id="regional.text.of-available-vaccines" defaultMessage="Наявних Вакцин"/>
                             </p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading is-3 has-text-light mb-4"><b>Топ-1</b></p>
-                            <p className="title is-5 has-text-light mb-2">/*{}*/</p>
+                            <p className="heading is-3 has-text-light mb-4"><b>{localized_TOP}-1</b></p>
+                            <p className="title is-5 has-text-light mb-2">{intl.formatMessage({id:"direct-translation./*{}*/"})}</p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading is-3 has-text-light mb-4"><b>Топ-2</b></p>
-                            <p className="title is-5 has-text-light mb-2">/*{}*/</p>
+                            <p className="heading is-3 has-text-light mb-4"><b>{localized_TOP}-2</b></p>
+                            <p className="title is-5 has-text-light mb-2">{intl.formatMessage({id:"direct-translation./*{}*/"})}</p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading is-2 has-text-light mb-4"><b>Топ-3</b></p>
-                            <p className="title is-5 has-text-light mb-2">/*{}*/</p>
+                            <p className="heading is-2 has-text-light mb-4"><b>{localized_TOP}-3</b></p>
+                            <p className="title is-5 has-text-light mb-2">{intl.formatMessage({id:"direct-translation./*{}*/"})}</p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
@@ -488,28 +557,30 @@ class RegionalTextSectionComponent extends React.Component {
                     <div className="level-item has-text-centered">
                         <div>
                             <p className="title is-4 has-text-light">
-                                Анти-Топ <br />Відсутніх Вакцин:
+                                <FormattedMessage id="regional.text.antitop" defaultMessage="Анти-Топ"/>
+                                <br/>
+                                <FormattedMessage id="regional.text.of-absent-vaccines" defaultMessage="Відсутніх Вакцин"/>
                             </p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading mb-4"><b>Топ-1</b></p>
-                            <p className="title is-5 has-text-light mb-2">/*{}*/</p>
+                            <p className="heading mb-4"><b>{localized_TOP}-1</b></p>
+                            <p className="title is-5 has-text-light mb-2">{intl.formatMessage({id:"direct-translation./*{}*/"})}</p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading mb-4"><b>Топ-2</b></p>
-                            <p className="title is-5 has-text-light mb-2">/*{}*/</p>
+                            <p className="heading mb-4"><b>{localized_TOP}-2</b></p>
+                            <p className="title is-5 has-text-light mb-2">{intl.formatMessage({id:"direct-translation./*{}*/"})}</p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="heading mb-4"><b>Топ-3</b></p>
-                            <p className="title is-5 has-text-light mb-2">/*{}*/</p>
+                            <p className="heading mb-4"><b>{localized_TOP}-3</b></p>
+                            <p className="title is-5 has-text-light mb-2">{intl.formatMessage({id:"direct-translation./*{}*/"})}</p>
                             <p className="title has-text-light">/*{}*/</p>
                         </div>
                     </div>
@@ -518,7 +589,7 @@ class RegionalTextSectionComponent extends React.Component {
                     <div className="level-item has-text-centered">
                         <div>
                             <p className="title is-3 has-text-light">
-                                Інше:
+                                <FormattedMessage id="regional.text.other" defaultMessage="Інше"/>:
                             </p>
                         </div>
                     </div>
@@ -526,11 +597,14 @@ class RegionalTextSectionComponent extends React.Component {
                 <nav className="level is-justify-content-center has-text-light is-mobile mb-5 pb-5">
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="title is-5 has-text-light mb-3">Залишки, прозвітовані більше, ніж 7 днів тому</p>
+                            <p className="title is-5 has-text-light mb-3"><FormattedMessage id="regional.text.late-reported-leftovers" defaultMessage="Залишки, прозвітовані більше, ніж 7 днів тому"/></p>
                             {
                                 this.state.timed_out_reports.index.map((el, i) => {
-                                    return (<p key={i} className="heading is-6 has-text-light mb-2">{el} – {this.state.timed_out_reports.data[i][0].toLocaleString()} ({this.state.timed_out_reports.data[i][1]} закладів)
-                                    </p>);
+                                    return (
+                                        <p key={i} className="heading is-6 has-text-light mb-2">
+                                            {intl.formatMessage({id: `direct-translation.${el}`, defaultMessage: el})} – {this.state.timed_out_reports.data[i][0].toLocaleString()} ({this.state.timed_out_reports.data[i][1]} {intl.formatMessage({id: `direct-translation.FACILITIES`, defaultMessage: 'закладів'})})
+                                        </p>
+                                    );
                                 })
                             }
                         </div>
@@ -539,7 +613,7 @@ class RegionalTextSectionComponent extends React.Component {
                         <div className="columns is-multiline is-centered">
                             <div className="column is-full has-text-centered">
                                 <p className="title is-4 has-text-light">
-                                    Дефіцитні вакцини:
+                                    <FormattedMessage id="regional.text.scarce-vaccines" defaultMessage="Дефіцитні вакцини"/>:
                                 </p>
                             </div>
                             {
@@ -547,10 +621,15 @@ class RegionalTextSectionComponent extends React.Component {
                                     return (
                                         <div key={i} className="column is-4 has-text-centered">
                                             <div>
-                                                <p className="title is-5 has-text-light mb-5">{item.vaccine}</p>
-                                                <p className="heading is-5 has-text-light">{item.regions.length < 6 ? item.regions.join(', ') : (
-                                                    item.regions.slice(0, 5).join(', ') + '... (усього – ' + (item.regions.length) + ')'
-                                                )}</p>
+                                                <p className="title is-5 has-text-light mb-5">{intl.formatMessage({id: `direct-translation.${item.vaccine}`})}</p>
+                                                <p className="heading is-5 has-text-light">{
+                                                    item.regions.length < 6 ? 
+                                                    item.regions.map(el=> intl.formatMessage({id: `direct-translation.${el}`})).join(', ') : 
+                                                    (
+                                                        item.regions.slice(0, 5).map(el=> intl.formatMessage({id: `direct-translation.${el}`})).join(', ') + 
+                                                        `... (${intl.formatMessage({id: "direct-translation.OVERALL", defaultMessage: "Усього"})} – ${item.regions.length})`
+                                                    )
+                                                }</p>
                                             </div>
                                         </div>)
                                     })
@@ -566,9 +645,25 @@ class RegionalTextSectionComponent extends React.Component {
 
 
 class InstitutionalComponent extends React.Component {
+    static contextType = IntlContext;
+
     state = {
-        data: /*{}*/,
+        defaultData: /*{}*/,
+        data: null,
     }
+
+    translateData = (data) => {
+        const intl = this.context;
+        return data.map(el => {
+            return {
+                Name: intl.formatMessage({id: `direct-translation.${el.Name}`, defaultMessage: el.Name}),
+                Rgn: intl.formatMessage({id: `direct-translation.${el.Rgn}`, defaultMessage: el.Rgn}),
+                Fclt: intl.formatMessage({id: `direct-translation.${el.Fclt}`, defaultMessage: el.Fclt}),
+                Amnt: el.Amnt,
+            }
+        });
+    }
+
 
     createTreeFromData = (data) => {
         // From the data of the form:
@@ -600,20 +695,36 @@ class InstitutionalComponent extends React.Component {
     }
 
     render() {
-        return (
+        return this.state.data ? (
             <div id="institutional-section">
                 {/*<img src="https://i.ibb.co/7z2FPgV/112768-red-and-black-blurred-background-vector-2.jpg" alt=""/>*/}
                 <div className="gradient-background"></div>
 
-                <InstitutionalChartSectionComponent data={this.state.data} addNewChart={this.props.addNewChart} createTreeFromData={this.createTreeFromData}/>
+                <InstitutionalChartSectionComponent data={this.state.data} language={this.props.language} addNewChart={this.props.addNewChart} createTreeFromData={this.createTreeFromData}/>
                 
-                <InstitutionalTextSectionComponent data={this.state.data} createTreeFromData={this.createTreeFromData}/>
+                <InstitutionalTextSectionComponent data={this.state.data} language={this.props.language} createTreeFromData={this.createTreeFromData}/>
             </div>
-        );
+        ) : null;
+    }
+
+    componentDidMount() {
+        this.setState({
+            data: this.translateData(this.state.defaultData),
+        });
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.language != this.props.language) {
+            this.setState({
+                data: this.translateData(this.state.defaultData)
+            });
+        }
     }
 }
 
 class InstitutionalChartSectionComponent extends React.Component {
+    static contextType = IntlContext;
+
     state = {
         vaccinePicked: null,
     }
@@ -707,6 +818,7 @@ class InstitutionalChartSectionComponent extends React.Component {
     }
 
     componentDidMount() {
+        const intl = this.context;
         const tree = this.props.createTreeFromData(this.props.data);
         const instChartHolder = document.getElementById('section-3-chart');
         const chart = echarts.init(instChartHolder, 'roma');
@@ -739,7 +851,7 @@ class InstitutionalChartSectionComponent extends React.Component {
                 }],
                 false)),
             title: {
-                text: "Залишки вакцин у ЗОЗ",
+                text: intl.formatMessage({id:"institutional.chart-section.chart-title", defaultMessage:"Залишки вакцин у ЗОЗ"}),
                 // backgroundColor: '#1F2632',
                 // borderWidth: 1, // border width
                 // borderRadius: 10, // border radius for rounded corners
@@ -841,7 +953,7 @@ class InstitutionalChartSectionComponent extends React.Component {
                 ],
                 data: tree,
                 radius: ['13%', '96%'],
-                name: "Загальна кількість залишків",
+                name: intl.formatMessage({id:"institutional.chart-section.series-name", defaultMessage:"Загальна кількість залишків"}),
                 overflow: "breakAll",
                 itemStyle: {
                     // color: c,
@@ -884,7 +996,7 @@ class InstitutionalChartSectionComponent extends React.Component {
             }
             // Clicked on vaccine
             else if ( (params.data.children[0].hidden_children) ){
-                prev_element = {name: "Загальна кількість залишків", type: 'root'};
+                prev_element = {name: intl.formatMessage({id:"institutional.chart-section.series-name", defaultMessage:"Загальна кількість залишків"}), type: 'root'};
                 chartCompontent.setState({vaccinePicked: params.treePathInfo.at(-1).name})
                 chart.dispatchAction({
                     type: 'sunburstRootToNode',
@@ -898,7 +1010,7 @@ class InstitutionalChartSectionComponent extends React.Component {
                 chart.setOption({});
                 chart.dispatchAction({
                     type: 'sunburstRootToNode',
-                    targetNode: prev_element ? prev_element.name : 'Загальна кількість залишків'
+                    targetNode: prev_element ? prev_element.name : intl.formatMessage({id:"institutional.chart-section.series-name", defaultMessage:"Загальна кількість залишків"})
                 });
 
                 prev_element = undefined;
@@ -906,6 +1018,147 @@ class InstitutionalChartSectionComponent extends React.Component {
         });
 
         this.props.addNewChart(chart);
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if(prevProps.language != this.props.language) {
+            const intl = this.context;
+            const tree = this.props.createTreeFromData(this.props.data);
+            this.chart.setOption({
+                title: {
+                    text: intl.formatMessage({id:"institutional.chart-section.chart-title", defaultMessage:"Залишки вакцин у ЗОЗ"}),
+                },
+                series: {
+                    type: 'sunburst',
+                    emphasis: {
+                        focus: 'descendant',
+                        blurScope: 'global',
+                    },
+                    blur: {
+                        itemStyle: {
+                            opacity: 0.6
+                        }
+                    },
+                    levels: [
+                        {
+                            label: {
+                                show: false,
+                                color: 'transparent'
+                            }
+                        }, // Leave the innermost level as default
+                        {
+                            label: {
+                                show: true, // Show labels for the first level
+                                rotate: 'radial',
+                                fontWeight: 'bold',
+                                fontSize: '1rem'
+                            }
+                        },
+                        {
+                            label: {
+                                show: true, // Hide labels for the rest levels
+                                color: 'transparent',
+                                /*
+                                rotate: 'tangential',
+
+                                fontFamily: 'Georgia',
+                                color: '#EEE',
+                                fontSize: 12
+                                */
+                            }
+                        },
+                        {
+                            label: {
+                                show: true, // Hide labels for the rest levels
+                                color: 'transparent',
+
+                                /*
+                                rotate: 'tangential',
+
+                                fontFamily: 'Georgia',
+                                color: '#EEE',
+                                fontSize: 14
+                                */
+                            }
+                        },
+                        {
+                            label: {
+                                show: false, // Hide labels for the rest levels
+                                /* 
+                                rotate: 'radial',
+
+                                fontFamily: 'Georgia',
+                                color: '#EEE',
+                                fontSize: 14
+                                */
+                            }
+                        }
+                    ],
+                    data: tree,
+                    radius: ['13%', '96%'],
+                    name: intl.formatMessage({id:"institutional.chart-section.series-name", defaultMessage:"Загальна кількість залишків"}),
+                    overflow: "breakAll",
+                    itemStyle: {
+                        // color: c,
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        borderColor: 'rgba(0,0,0, 0.01)',
+                        // shadowColor: 'rgba(0, 0, 0, 0.5)',
+                    },
+                },
+            });
+
+
+            const chartCompontent = this;
+            const chart = this.chart;
+            let last_leaf = undefined;
+            let prev_element = undefined;
+            chart.on('click', function (params) {
+                // Clicked on the region
+                if (params.data.hidden_children) {
+                    last_leaf = params.data;
+                    prev_element = {name: params.data.id.split('_')[0], type: 'vaccine'};
+                    if (!last_leaf.children) {
+                        last_leaf.children = last_leaf.hidden_children;
+                    }
+                    chart.setOption({});
+                    chartCompontent.setState({vaccinePicked: params.treePathInfo.at(-2).name})
+                    chart.dispatchAction({
+                        type: 'sunburstRootToNode',
+                        targetNode: params.treePathInfo.at(-2).name + '_' + params.treePathInfo.at(-1).name
+                    });
+                }
+                // Clicked on facility
+                else if ( !(params.data.children || params.data.hidden_children) ){
+                    prev_element = {name: last_leaf.id, type: 'region'};
+                    chart.dispatchAction({
+                        type: 'sunburstRootToNode',
+                        targetNode: params.treePathInfo.at(-1).name
+                    });
+                }
+                // Clicked on vaccine
+                else if ( (params.data.children[0].hidden_children) ){
+                    prev_element = {name: intl.formatMessage({id:"institutional.chart-section.series-name", defaultMessage:"Загальна кількість залишків"}), type: 'root'};
+                    chartCompontent.setState({vaccinePicked: params.treePathInfo.at(-1).name})
+                    chart.dispatchAction({
+                        type: 'sunburstRootToNode',
+                        targetNode: params.treePathInfo.at(-1).name
+                    });
+                }
+                // Clicked on the root
+                else {
+                    (!prev_element || prev_element.type !== 'region') && last_leaf && delete last_leaf.children;
+                    (!prev_element || prev_element.type == 'root') && chartCompontent.setState({vaccinePicked: null});
+                    chart.setOption({});
+                    chart.dispatchAction({
+                        type: 'sunburstRootToNode',
+                        targetNode: prev_element ? prev_element.name : intl.formatMessage({id:"institutional.chart-section.series-name", defaultMessage:"Загальна кількість залишків"})
+                    });
+
+                    prev_element = undefined;
+                }
+            });
+        }
     }
 }
 
@@ -943,32 +1196,32 @@ class SearchBarComponent extends React.Component {
         return (
             <div className="form__group field">
                 <input type="input" className="form__field" placeholder="Name" name="name" id='name' value={this.state.searchValue} onChange={this.onSearchInput} required />
-                <label htmlFor="name" className="form__label">Шукаєте щось?</label>
+                <label htmlFor="name" className="form__label"><FormattedMessage id="institutional.chart-section.search-bar.looking-for-something" defaultMessage="Шукаєте щось?"/></label>
             </div>
         );
     }
 }
 
 class InstitutionalTextSectionComponent extends React.Component {
+    static contextType = IntlContext;
+    
     state = {
-        selectedRegion: 'Україна',
+        selectedRegion: null,
+        allRegions: null
     }
-
-    allRegions = ['Україна'].concat([...new Set(this.props.data.map(el => el.Rgn))].sort());
-
 
     selectRegionHandler = (value) => {
         (value !== this.state.selectedRegion) && this.setState({ selectedRegion: value });
     }
 
     render() {
-        return (
+        return this.state.allRegions ? (
             <section id="section-4" className="hero is-fullheight">
                 <div className="columns is-multiline is-centered is-vcentered is-align-content-space-around has-text-light is-mobile mx-5 my-5">
                     <div className="column is-4 has-text-centered is-flex is-justify-content-center">
                         <div className="column is-10 has-text-centered">
                         <p className="title is-4 has-text-light">
-                            Статистика розподілу вакцин за закладами в:
+                            <FormattedMessage id="institutional.text-section.title.distribution-statistics" defaultMessage="Статистика розподілу вакцин за закладами в" />:
                         </p>
                         </div>
                     </div>
@@ -977,7 +1230,7 @@ class InstitutionalTextSectionComponent extends React.Component {
                         <DropDownRegionSelectComponent 
                             onRegionSelect={this.selectRegionHandler} 
                             selectedRegion={this.state.selectedRegion} 
-                            dropDownRegions={this.allRegions} 
+                            dropDownRegions={this.state.allRegions} 
                         />
                     </div>
 
@@ -988,21 +1241,34 @@ class InstitutionalTextSectionComponent extends React.Component {
 
                 </div>
             </section>
-        );
+        ) : null;
+    }
+
+    componentDidMount() {
+        const intl = this.context;
+        const UKRAINE = intl.formatMessage({id:'direct-translation.Україна', defaultMessage:"Україна"});
+        this.setState({
+            allRegions: [UKRAINE].concat([...new Set(this.props.data.map(el => el.Rgn==UKRAINE ? null : el.Rgn).filter(el => el !== null))].sort()),
+            selectedRegion: UKRAINE,
+        });
     }
 }
 
 class DropDownRegionSelectComponent extends React.Component {
+    static contextType = IntlContext;
+
     render() {
+        const intl = this.context;
+
         const buttonStyle = {
-            fontWeight: this.props.selectedRegion === 'Україна' ? 'bold' : 'normal',
+            fontWeight: intl.formatMessage({id:"direct-translation."+this.props.selectedRegion, defaultMessage:this.props.selectedRegion}) === intl.formatMessage({id:"direct-translation.Україна", defaultMessage:"Україна"}) ? 'bold' : 'normal',
         };
 
         return (
                 <div className="dropdown is-hoverable" style={this.props.style}>
                     <div className="dropdown-trigger">
                         <button className="button" aria-haspopup="true" aria-controls="dropdown-menu" style={buttonStyle}>
-                            <span>{this.props.selectedRegion}</span>
+                            <span>{intl.formatMessage({id:"direct-translation."+this.props.selectedRegion, defaultMessage:this.props.selectedRegion})}</span>
                             <span className="icon is-small">
                                 <i className="fas fa-angle-down" aria-hidden="true"></i>
                             </span>
@@ -1012,8 +1278,8 @@ class DropDownRegionSelectComponent extends React.Component {
                         <div className="dropdown-content">
                             {
                                 this.props.dropDownRegions.map((region, index) => (
-                                    <div key={index} className="dropdown-item has-text-dark" style={region === "Україна" ? {fontWeight: 'bold'} : {}} onClick={() => this.props.onRegionSelect(region)}>
-                                        {region}
+                                    <div key={index} className="dropdown-item has-text-dark" style={intl.formatMessage({id:"direct-translation."+region, defaultMessage:region}) === intl.formatMessage({id:"direct-translation.Україна", defaultMessage:"Україна"}) ? {fontWeight: 'bold'} : {}} onClick={() => this.props.onRegionSelect(region)}>
+                                        {intl.formatMessage({id:"direct-translation."+region, defaultMessage:region})}
                                     </div>
                                 ))
                             }
@@ -1025,10 +1291,12 @@ class DropDownRegionSelectComponent extends React.Component {
 }
 
 class InstitituionalStatsReportComponent extends React.Component {
+    static contextType = IntlContext;
     render () {
+        const intl = this.context;
         // Create a tree with vaccines and institutions
         const tree = this.props.data.reduce((acc, item) => {
-            if ((this.props.selectedRegion === 'Україна') || (item.Rgn === this.props.selectedRegion)) {
+            if ((this.props.selectedRegion === intl.formatMessage({id:'direct-translation.Україна', defaultMessage:"Україна"})) || (item.Rgn === this.props.selectedRegion)) {
                 let vaccine = acc[item.Name];
                 if (!vaccine) {
                     vaccine = { name: item.Name, facilities: [] };
@@ -1059,7 +1327,7 @@ class InstitituionalStatsReportComponent extends React.Component {
                 <div className="column is-4">
                     <div>
                         <p className="title is-4 has-text-light has-text-centered">
-                            Кількість закладів, які звітують:
+                            <FormattedMessage id="institutional.text-section.title.reporting-facilities-amount" defaultMessage="Кількість закладів, які звітують" />:
                         </p>
                         <p className="title is-3 has-text-success has-text-centered">
                             {facilities_in_region}
@@ -1071,7 +1339,7 @@ class InstitituionalStatsReportComponent extends React.Component {
                         <div className="column is-full">
                             <div>
                                 <p className="title is-4 has-text-light has-text-centered">
-                                    Усі вакцини в регіоні і статистика по ним:
+                                    <FormattedMessage id="institutional.text-section.title.every-vaccine-with-statistics" defaultMessage="Усі вакцини в регіоні і статистика по ним" />:
                                 </p>
                             </div>
                         </div>
@@ -1085,36 +1353,49 @@ class InstitituionalStatsReportComponent extends React.Component {
                                 return (
                                     <div key={i} className="column is-3 my-3">
                                         <p className="title is-4 has-text-light has-text-centered mb-3">
-                                            {vaccine.name}:
+                                            <FormattedMessage id={`direct-translation.${vaccine.name}`} defaultMessage={vaccine.name}/>:
                                         </p>
                                         <div className="has-text-centered my-1">
                                             <p className="heading is-5 is-inline has-text-light mr-2">
-                                                Звітує про вакцину
+                                                <FormattedMessage id="institutional.text-section.stats.reporting-about-vaccine" defaultMessage="Звітує про вакцину" />
                                             </p>
                                             <p className="title is-5 is-inline has-text-light mr-2">
-                                                {vaccine.facilities.length} закладів
+                                                {vaccine.facilities.length} <FormattedMessage id="direct-translation.FACILITIES" defaultMessage="закладів" />
                                             </p>
                                         </div>
                                         <div className="has-text-centered my-1">
-                                            <p className="heading is-5 is-inline has-text-light mr-2">
-                                                Топ-1 заклад має
-                                            </p>
-                                            <p className="title is-5 is-inline has-text-light mr-2">
-                                                {vaccine.facilities.filter(el => !el.facility.toLowerCase().includes('цкпх')).at(-1).value}
-                                            </p>
-                                            <p className="heading is-5 is-inline has-text-light">
-                                                одиниць
-                                            </p>
+                                            
+                                            {(() => {
+                                                    let filteredData = vaccine.facilities.filter(el => !el.facility.toLowerCase().includes('цкпх'));
+                                                    
+                                                    return filteredData.length ? (
+                                                        <>
+                                                        <p className="heading is-5 is-inline has-text-light mr-2">
+                                                            <FormattedMessage id="institutional.text-section.stats.top1-facility-stock" defaultMessage="Топ-1 заклад має" />
+                                                        </p>
+                                                        <p className="title is-5 is-inline has-text-light mr-2">{filteredData.at(-1).value}</p>
+                                                        <p className="heading is-5 is-inline has-text-light">
+                                                            <FormattedMessage id="direct-translation.UNITS" defaultMessage="одиниць" />
+                                                        </p>
+                                                        </>
+                                                    ) : (
+                                                        <p className="heading is-5 is-inline has-text-light mr-2 has-text-warning">
+                                                            <FormattedMessage id="institutional.text-section.stats.absent-data-top1-facility-stock" defaultMessage="Немає інформації про наявність в Топ-1 закладі"/>
+                                                        </p>
+                                                    )
+                                                })()
+                                            }
+                                            
                                         </div>
                                         <div className="has-text-centered my-1">
                                             <p className="heading is-5 is-inline has-text-light mr-2">
-                                                При цьому,
+                                                <FormattedMessage id="institutional.text-section.stats.considering-this" defaultMessage="При цьому" />,
                                             </p>
                                             <p className="title is-5 is-inline has-text-light mr-2">
-                                                {vaccine_quantile_index + 1} заклади
+                                                {vaccine_quantile_index + 1} <FormattedMessage id="direct-translation.FACILITIES" defaultMessage="заклади" />
                                             </p>
                                             <p className="heading is-5 is-inline has-text-light">
-                                                мають
+                                            <FormattedMessage id="institutional.text-section.stats.have" defaultMessage="мають" />
                                             </p>
                                         </div>
                                         <div className="has-text-centered my-1">
@@ -1122,18 +1403,18 @@ class InstitituionalStatsReportComponent extends React.Component {
                                                 ≤ {vaccine.facilities[vaccine_quantile_index].value}
                                             </p>
                                             <p className="heading is-5 is-inline has-text-light">
-                                                одиниць
+                                                <FormattedMessage id="direct-translation.UNITS" defaultMessage="одиниць" />
                                             </p>
                                         </div>
                                         <div className="has-text-centered my-1">
                                             <p className="heading is-5 is-inline has-text-light mr-2">
-                                                Жодної одиниці вакцини в
+                                                <FormattedMessage id="institutional.text-section.stats.no-vaccine-at" defaultMessage="Жодної одиниці вакцини в" />
                                             </p>
                                             <p className="title is-5 is-inline has-text-light mr-2">
-                                                <span className={facilitiesReportingNoVaccine.length == 0 ? "has-text-success" : "has-text-warning"}>{facilitiesReportingNoVaccine.length}</span> + <span className="has-text-danger">{facilities_in_region - vaccine.facilities.length}</span>
+                                                <span className={facilitiesReportingNoVaccine.length == 0 ? "has-text-success" : "has-text-warning"}>{facilitiesReportingNoVaccine.length}</span> + <span className={(facilities_in_region - vaccine.facilities.length) == 0 ? "has-text-success" : "has-text-danger"}>{facilities_in_region - vaccine.facilities.length}</span>
                                             </p>
                                             <p className="heading is-5 is-inline has-text-light mr-2">
-                                                закладах
+                                                <FormattedMessage id="direct-translation.FACILITIES" defaultMessage="закладах" />
                                             </p>
                                         </div>
                                     </div>
@@ -1225,6 +1506,8 @@ class LeftoversUsageExpirationComponent extends React.Component {
 }
 
 class LeftoversUsageExpirationChartSectionComponent extends React.Component {
+    static contextType = IntlContext;
+
     render() {
         return (
             <section id="section-5" className="hero is-fullheight">
@@ -1239,7 +1522,7 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
 
                             <div className="checkbox-wrapper usage-includer" onClick={this.props.onIncludeUsageClicked}>
                                 <input id="check" type="checkbox" className="plus-minus" checked={this.props.includeUsage} onChange={this.props.onIncludeUsageClicked}/>
-                                <p className="has-text-white-ter">{this.props.includeUsage ?  "Показати використання" : "Розрахувати забезпеченість"}?</p>
+                                <p className="has-text-white-ter"><b>{this.props.includeUsage ?  <FormattedMessage id="leftovers.chart.usage-switch.overall-stats" defaultMessage="Показати Загальну Статистику"/> : <FormattedMessage id="leftovers.chart.usage-switch.usage-included-stats" defaultMessage="Показати Статистику на Основі Використання"/>}?</b></p>
                             </div>
                         </div>
                     </div>
@@ -1292,7 +1575,6 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                     color: 'hsl(0, 0%, 88%)'
                 },
 
-                text: 'Прогноз рівня залишків',
             },
             legend: {
                 top: 2.75*rem,
@@ -1408,16 +1690,42 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
     }
 
     componentDidUpdate() {
+        const intl = this.context;
+
         let data = this.props.data[this.props.selectedRegion];
         this.reference.data = data;
 
         this.chart.setOption({
+            title:{
+                text: intl.formatMessage({id:"leftovers.chart.title", defaultMessage:'Прогноз обсягу залишків'}),
+            },
             legend: {
                 data: data.columns,
-                selected: Object.entries(this.chart.getOption().legend[0].selected).reduce((acc, item) => {
+                selected: Object.entries(this.chart.getOption().legend[0].selected).reduce((acc, item, i) => {
                     acc[item[0]] = item[1] && data.columns.includes(item[0]);
                     return acc;
                 },{}),
+                formatter: (el) => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})
+            },
+            tooltip: {
+                formatter: (params) => {
+                    let date = new Date(params[0].data[0]);
+                    let dateStr = date.toLocaleDateString("uk-UA");
+                    let tooltip = `<b>${dateStr}</b><br/>`;
+                    params.forEach((el, index) => {
+                        tooltip += `<div class="is-flex is-justify-content-space-between mt-1">
+                            <span class="mr-3">
+                                <svg height="10" width="10">
+                                    <circle cx="5" cy="5" r="5" fill="${el.color}"/>
+                                </svg>
+                                ${intl.formatMessage({id:`direct-translation.${el.seriesName}`, defaultMessage:el.seriesName})}
+                            </span> 
+                            <b>${el.data[1] != "Закінчилась" ? el.data[1] : (intl.formatMessage({id:"direct-translation.Закінчилась",defaultMessage:"Закінчилась"}))}</b>
+                            </div>
+                        `;
+                    });
+                    return tooltip;
+                }
             },
             dataZoom: [{
                 start: 0,
@@ -1465,11 +1773,24 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                     }),
                 }
             }),
+
+            toolbox: {
+                feature: {
+                    saveAsImage: {
+                        title: intl.formatMessage({id:"direct-translation.SAVE-AS-IMAGE", defaultMessage:'Зберегти як зображення'}),
+                    },
+                    myRestore: {
+                        title: intl.formatMessage({id:"direct-translation.RESTORE", defaultMessage:'Відновити'}),
+                    }
+                }
+            }
         });
     }
 }
 
 class LeftoversUsageExpirationInfographicsSectionComponent extends React.Component {
+    static contextType = IntlContext;
+
     constructor(props) {
         super(props);
 
@@ -1520,33 +1841,101 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
         3. Show the trends of usage of each vaccine in selectedRegion
     */
     render() {
+        let intl = this.context;
+
         const PHRASES = [
-            (region) => <React.Fragment>А хто це в нас такий молодець, у якого нічого не псується?<br/>Так це ж {region}!</React.Fragment>,
-            (region) => <React.Fragment>А ну гляньте, хто це тут без проблем?<br/>Здається, це {region}!</React.Fragment>,
-            (region) => <React.Fragment>О, які ми молодці!<br/>А хто точно молодець? А {region} молодець!</React.Fragment>,
-            (region) => <React.Fragment>А ось і зірка!<br/>Ей, {region}, йди шепну на вушко: <i>та ти просто зірка!</i></React.Fragment>,
-            (region) => <React.Fragment>Хто тут без проблем?<br/>Очевидно! Це ж {region}!</React.Fragment>,
-            (region) => <React.Fragment>Ура!<br/>А {region} таки вміє показати як вживати вакцину!</React.Fragment>,
-            (region) => <React.Fragment>Ого, ну і дає {region}!<br/>Так у вас же все просто бімба!</React.Fragment>,
-            (region) => <React.Fragment>Вітаємо, {region}!<br/>Вакцина у вас не псується, а ми тому й раді!</React.Fragment>,
-            (region) => <React.Fragment>Так тримати, {region}!<br/>У вас усе гаразд!</React.Fragment>,
-            (region) => <React.Fragment>Хто тут найкращий?<br/>Безумовно, {region}!</React.Fragment>,
-            (region) => <React.Fragment>Усім би бути як {region}!<br/>У вас там усе бомбезно!</React.Fragment>,
-            (region) => <React.Fragment>Ось хто точно знає, як треба працювати!<br/>В сенсі "хто?"? Звичайно, {region}!</React.Fragment>,
-            (region) => <React.Fragment>А ось і наш чемпіон!<br/>Так-так, {region}, ви просто супер!</React.Fragment>,
-            (region) => <React.Fragment>Чому це тут не відображаються проблеми?<br/>Так бо це ж {region}! Так тримати!</React.Fragment>,
-            (region) => <React.Fragment>Ура, {region}!<br/>У вас все просто космос!</React.Fragment>,
-            (region) => <React.Fragment>Привітик, {region}!<br/>У вас без проблем (і у нас, разом з вами)!</React.Fragment>,
-            (region) => <React.Fragment>Уау, {region}!<br/>Вакцина не псується – то й ЦГЗ сміється!</React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-1-1" defaultMessage="А хто це в нас такий молодець, у якого нічого не псується?"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-1-2" defaultMessage="Так це ж {region}!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-1" defaultMessage="А ну гляньте, хто це тут без проблем?"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-2" defaultMessage="Здається, це {region}!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-1" defaultMessage="О, які ми молодці!"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-2" defaultMessage="А хто точно молодець? А {region} молодець!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-1" defaultMessage="А ось і наша молодчинка!"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-2" defaultMessage="Ей, {region}, йди шепну на вушко: ти просто зірка!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-1" defaultMessage="Хто тут без проблем?"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-2" defaultMessage="Очевидно! Це ж {region}!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-1" defaultMessage="Ура!"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-2" defaultMessage="А {region} таки вміє показати як вживати вакцину!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-1" defaultMessage="Ого, ну і дає {region}!" values={{region}}/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-2" defaultMessage="Ну у вас же все просто бімба!"/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-1" defaultMessage="Вітаємо, {region}!" values={{region}}/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-2" defaultMessage="Знаєте, чому ми усміхаємось? Бо вакцина у вас не псується!"/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-1" defaultMessage="Так тримати, {region}!" values={{region}}/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-2" defaultMessage="Не знаю, як у інших, а у вас усе супер!"/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-1" defaultMessage="Хто тут найкращий?"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-2" defaultMessage="Безумовно, {region}!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-11-1" defaultMessage="Усім би бути як {region}!" values={{region}}/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-11-2" defaultMessage="Чому? Бо у вас усе бомбезно!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-1" defaultMessage="Ось хто точно знає, як треба працювати!"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-2" defaultMessage='В сенсі "хто?"? Звичайно, {region}!' values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-1" defaultMessage="А ось і наш чемпіон!"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-2" defaultMessage="Так-так, {region}, ви просто супер!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-1" defaultMessage="Чому це тут не відображаються проблеми?"/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-2" defaultMessage="Елементарно, Ватсон! Бо це ж {region}, тут їх нема!" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-15-1" defaultMessage="Ура, {region}!" values={{region}}/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-15-2" defaultMessage="У вас усе просто космос!" values={{region}}/></React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-16-1" defaultMessage="Привітик, {region}!" values={{region}}/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-16-2" defaultMessage="Ви знали, що у вас без проблем? (і у нас, разом з вами)" values={{region}}/>
+            </React.Fragment>,
+            (region) => <React.Fragment>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-1" defaultMessage="Уау, {region}!" values={{region}}/>
+                <br/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-2" defaultMessage="Вакцина не псується – то й ЦГЗ сміється!"/>
+            </React.Fragment>,
         ];
         const replacement = this.props.selectedRegion == "м. Київ" ? 
-            (<span>наш <b className="has-text-success">Київ</b></span>) :
+            (<span>{intl.formatMessage({id:"leftovers.infographics.include-usage.OUR", defaultMessage: "наш"})} <b className="has-text-success">{intl.formatMessage({id:"direct-translation.Київ", defaultMessage: "Київ"})}</b></span>) :
             (this.props.selectedRegion == "Україна" ? 
-                (<b className="has-text-success">вся Українонька</b>) :
-                (<span>наша <b className="has-text-success">{this.props.selectedRegion} область</b></span>)
+                (<b className="has-text-success">{intl.formatMessage({id:"leftovers.infographics.include-usage.whole-Ukraine", defaultMessage: "вся Українонька"})}</b>) :
+                (<span>{intl.formatMessage({id:"leftovers.infographics.include-usage.OUR", defaultMessage: "наша"})} <b className="has-text-success">{intl.formatMessage({id:`direct-translation.${this.props.selectedRegion}`, defaultMessage: this.props.selectedRegion})} {intl.formatMessage({id: "direct-translation.REGION", defaultMessage:"область"})}</b></span>)
             )
         let phrase = PHRASES[Math.floor(Math.random() * PHRASES.length)](replacement);
-        clg(phrase);
 
         let defaultOption = Object.assign({}, globalOption);
         Object.assign(defaultOption, {
@@ -1562,7 +1951,7 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                 left:'10px'
             },
             grid: {
-                left: '10px',
+                left: '15px',
                 right: '10px',
                 bottom: '10px',
                 top: '40px',
@@ -1603,7 +1992,7 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                                                     {el}
                                                 </p>
                                                 <p className="subtitle has-text-white-ter">
-                                                    Зіпсуються <strong className="has-text-white-ter">{expiredByYears[el].toLocaleString()}</strong> одиниць
+                                                    <strong className="has-text-white-ter">{expiredByYears[el].toLocaleString()}</strong> <FormattedMessage id="leftovers.infographics.no-usage.vaccines-expiration-by-dates.units" defaultMessage="доз протермінуються протягом року"/>
                                                 </p>
                                             </div>
                                         </div>
@@ -1750,6 +2139,8 @@ class ChartComponent extends React.Component {
 }
 
 class VaccineCoverageChartComponent extends React.Component {
+    static contextType = IntlContext;
+
     state = {
         mapView: false,
         vaccineDisplayed: 'ІПВ',
@@ -1767,7 +2158,6 @@ class VaccineCoverageChartComponent extends React.Component {
     }
 
     onVaccineSelected = (vaccine) => {
-        clg("Hey, the state should change!");
         this.setState({ vaccineDisplayed: vaccine });
     }
 
@@ -1779,8 +2169,6 @@ class VaccineCoverageChartComponent extends React.Component {
             dimension: 0,
             inRange: {
                 color: [
-                    //'#f7797c',
-                    //'#d8ffc8',
                     '#ff421a',
                     '#f7797c',
                     '#c8ffb2',
@@ -1944,7 +2332,6 @@ class VaccineCoverageChartComponent extends React.Component {
         let option = {
             series: [
             {
-                name: 'Покриття вакциною (місяців)',
                 type: 'pictorialBar',
                 symbol: this.barPicture,
                 symbolRepeat: 'fixed',
@@ -1985,6 +2372,7 @@ class VaccineCoverageChartComponent extends React.Component {
     }
 
     componentDidUpdate() {
+        const intl = this.context;
         if (!this.state.mapView) {
             let data = this.props.data[this.props.selectedRegion];
             let coverage = data.columns.reduce((acc, item, i) => {
@@ -1997,12 +2385,15 @@ class VaccineCoverageChartComponent extends React.Component {
             }, {});
 
             this.chart.setOption({
+                title:{
+                    text: intl.formatMessage({id: "leftovers.infographics.coverage.title", defaultMessage:"Поточна забезпеченість (місяців)"})
+                },
                 yAxis: {
-                    data: Object.keys(coverage),
+                    data: Object.keys(coverage).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
                 },
                 series: [
                 {
-                    name: 'Покриття вакциною (місяців)',
+                    name: intl.formatMessage({id: "leftovers.infographics.coverage.series-name", defaultMessage:"Місяців"}),
                     type: 'pictorialBar',
                     symbol: this.barPicture,
                     symbolRepeat: 'fixed',
@@ -2021,7 +2412,15 @@ class VaccineCoverageChartComponent extends React.Component {
                     },
                     
                     data: Object.values(coverage),
-                }]
+                }],
+
+                toolbox:{
+                    feature: {
+                        myToggleMap: {
+                            title: intl.formatMessage({id:"leftovers.infographics.coverage.show-map", defaultMessage:"Показати на мапі"}),
+                        },
+                    }
+                }
             });
         }
         else {
@@ -2048,14 +2447,38 @@ class VaccineCoverageChartComponent extends React.Component {
 
             this.chart.setOption(
             {
-                series: [
-                {
+                title:{
+                    text: intl.formatMessage({id: "leftovers.infographics.coverage.title", defaultMessage:"Поточна забезпеченість (місяців)"})
+                },
+                tooltip: {
+                    formatter: (params) => {
+                        let vaccine = intl.formatMessage({id:`direct-translation.${params.seriesName}`, defaultMessage: params.seriesName});
+                        let tooltip = `<b>${vaccine}</b><br/>`;
+    
+                        tooltip += `<div class="is-flex is-justify-content-space-between mt-2">
+                            <span class="mr-3">
+                                <svg height="10" width="10">
+                                    <circle cx="5" cy="5" r="5" fill="${params.color}"/>
+                                </svg>
+                                ${intl.formatMessage({id:`direct-translation.${params.name}`, defaultMessage: params.name})}
+                            </span> 
+                            <b>${params.value}</b>
+                            </div>
+                        `;
+    
+                        return tooltip;
+                    }
+                },
+                series: [{
                     name: vaccineDisplayed,
                     type: 'map',
                     // roam: true,
                     map: 'Ukraine',
                     label: {
                         show: true,
+                        formatter: (props) => {
+                            return intl.formatMessage({id:`direct-translation.${props.name}`, defaultMessage:props.name})
+                        },
                         textStyle:{
                             fontSize: 15,
                             color: 'hsl(0, 0%, 100%)',
@@ -2084,23 +2507,34 @@ class VaccineCoverageChartComponent extends React.Component {
                         borderWidth: 1,
                     },
 
-                    data: data
-                },
-                ]
+                    data: data,
+                }],
+
+                toolbox:{
+                    feature: {
+                        myToggleMap: {
+                            title: intl.formatMessage({id:"leftovers.infographics.coverage.return-to-barChart", defaultMessage:"Повернутись до стовпчикової діаграми"}),
+                        },
+                    }
+                }
             });
         }
     }
 }
 
 class VaccineDropdownComponent extends React.Component {
+    static contextType = IntlContext;
+
     render() {
+        const intl = this.context;
+
         return (
             <div id="vaccineDropdown" className={this.props.display ? "" : "is-hidden"}>
                 <div className="dropdown__container">
                     <input type="checkbox" id="dropdown"/>
                     
                     <label className="dropdown__face" htmlFor="dropdown">
-                        <div className="dropdown__text tag is-success is-light is-medium"><b>{this.props.vaccineDisplayed}</b></div>
+                        <div className="dropdown__text tag is-success is-light is-medium"><b>{intl.formatMessage({id:`direct-translation.${this.props.vaccineDisplayed}`, defaultMessage: this.props.vaccineDisplayed})}</b></div>
                         
                         <div className="dropdown__arrow"></div>
                     </label>
@@ -2110,7 +2544,7 @@ class VaccineDropdownComponent extends React.Component {
                             {allVaccines.map((el, i) => {
                                 return (
                                     <li key={i} className="tag is-info is-light" onClick={() => this.props.onVaccineSelected(el)}>
-                                        {el}
+                                        {intl.formatMessage({id:`direct-translation.${el}`, defaultMessage: el})}
                                     </li>
                                     );
                                 })}
@@ -2131,6 +2565,8 @@ class VaccineDropdownComponent extends React.Component {
 }
 
 class VaccinesExpectedToExpireChartComponent extends React.Component {
+    static contextType = IntlContext;
+    
     onChartInitialized = (chart) => {
         const barPicture = `path://M419.88,165.85H407.81a12.51,12.51,0,0,1-12.45-13.63,29.65,29.65,0,0,0-29.52-32.31H312.09V93.28A27.71,27.71,0,0,0,284.42,65.6H233.58a27.71,27.71,0,0,0-27.67,27.68v26.63H151.65a29.66,29.66,0,0,0-29.57,31.84l0,.67a12.5,12.5,0,0,1-12.47,13.43H98.12V203.7h22.35l19.29,217.42a23.61,23.61,0,0,0,23.63,21.63h186a23.69,23.69,0,0,0,23.59-21.2L396.27,203.7h23.61Zm-196-72.57a9.69,9.69,0,0,1,9.67-9.68h50.84a9.69,9.69,0,0,1,9.67,9.68v26.63H223.91ZM355,419.63a5.71,5.71,0,0,1-5.69,5.12h-186a5.7,5.7,0,0,1-5.7-5.22L138.54,203.7H378.17Z"/><path d="M306.36,307.3a47.56,47.56,0,0,1-7,24.81l-8-5.51a7.14,7.14,0,0,0-11.06,7.19l4.65,25a7.14,7.14,0,0,0,8.31,5.71l25-4.6A7.14,7.14,0,0,0,321,347l-7.87-5.41A64.24,64.24,0,0,0,258.81,243v16.71A47.6,47.6,0,0,1,306.36,307.3Z"/><path d="M193,260.41l7.87,5.41a64.23,64.23,0,0,0,54.33,98.55V347.66a47.53,47.53,0,0,1-40.55-72.36l8,5.51a7.14,7.14,0,0,0,11.06-7.19l-4.65-25a7.14,7.14,0,0,0-8.31-5.71l-25,4.6A7.13,7.13,0,0,0,193,260.41Z`
 
@@ -2139,9 +2575,7 @@ class VaccinesExpectedToExpireChartComponent extends React.Component {
         chart.setOption(this.props.defaultOption);
 
         let option = {
-            title: {
-                text: "Очікувані втрати (доз)",
-            },
+            
             color: ['#f7797c'],
             /*
             visualMap: {
@@ -2186,7 +2620,6 @@ class VaccinesExpectedToExpireChartComponent extends React.Component {
             },
             series: [
             {
-                name: 'Кількість вакцини',
                 type: 'pictorialBar',
                 symbol: barPicture,
                 symbolRepeat: true,
@@ -2210,6 +2643,8 @@ class VaccinesExpectedToExpireChartComponent extends React.Component {
     }
 
     componentDidUpdate() {
+        const intl = this.context;
+
         let notZeroExpirations = Object.keys(this.props.expirations).reduce((acc, item) => {
             if (this.props.expirations[item] != 0) {
                 acc[item] = this.props.expirations[item];
@@ -2218,11 +2653,15 @@ class VaccinesExpectedToExpireChartComponent extends React.Component {
         }, {});
 
         this.chart.setOption({
+            title: {
+                text: intl.formatMessage({id:`leftovers.infographics.expected-to-expire.title`, defaultMessage:"Очікувані втрати (доз)"}),
+            },
             xAxis: {
-                data: Object.keys(notZeroExpirations),
+                data: Object.keys(notZeroExpirations).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
             },
             series: [
             {
+                name: intl.formatMessage({id:`leftovers.infographics.expected-to-expire.title`, defaultMessage:'Кількість вакцини'}),
                 data: Object.values(notZeroExpirations),
             }]
         });
@@ -2230,15 +2669,14 @@ class VaccinesExpectedToExpireChartComponent extends React.Component {
 }
 
 class UsageRequiredToAvoidExpirationChartComponent extends React.Component {
+    static contextType = IntlContext;
+
     onChartInitialized = (chart) => {
         this.chart = chart;
 
         chart.setOption(this.props.defaultOption);
 
         let option = {
-            title: {
-                text: "Необхідне збільшення споживання\n(одиниць на місяць)",
-            },
             visualMap: {
                 min: 0,
                 max: 2000,
@@ -2288,7 +2726,6 @@ class UsageRequiredToAvoidExpirationChartComponent extends React.Component {
             },
             series: [
             {
-                name: 'Одиниць на місяць',
                 type: 'bar',
             }]
         };
@@ -2306,6 +2743,8 @@ class UsageRequiredToAvoidExpirationChartComponent extends React.Component {
     }
 
     componentDidUpdate() {
+        const intl = this.context;
+
         let expirations = this.props.expirations;
 
         let requiredUsageIncreases = expirations.columns.reduce((acc, vaccine, col) => {
@@ -2325,11 +2764,15 @@ class UsageRequiredToAvoidExpirationChartComponent extends React.Component {
         }, {});
 
         this.chart.setOption({
+            title: {
+                text: intl.formatMessage({id:`leftovers.infographics.usage-to-avoid-losses.title`, defaultMessage:"Необхідне збільшення споживання\n(одиниць на місяць)"}),
+            },
             xAxis: {
-                data: Object.keys(requiredUsageIncreases),
+                data: Object.keys(requiredUsageIncreases).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
             },
             series: [
             {
+                name: intl.formatMessage({id:`leftovers.infographics.usage-to-avoid-losses.series-name`, defaultMessage:"Одиниць на місяць"}),
                 data: Object.values(requiredUsageIncreases),
             }]
         });
@@ -2423,6 +2866,8 @@ class AverageUsageMapChartComponent extends React.Component {
 }
 
 class UsageBarChartComponent extends React.Component {
+    static contextType = IntlContext;
+
     onChartInitialized = (chart) => {
         let usage = this.props.detailedUsage;
         let averageUsage = this.props.averageUsage;
@@ -2460,8 +2905,6 @@ class UsageBarChartComponent extends React.Component {
                 data: seriesData[vaccine]
             });
         });
-
-
         
         let showLegend = true;
         let option = Object.assign({}, globalOption);
@@ -2495,7 +2938,7 @@ class UsageBarChartComponent extends React.Component {
             legend: {
                 type: 'plain',
                 left: "center",
-                top: "70px",
+                top: "45px",
                 selectedMode: 'multiple',
                 selected: Object.keys(seriesData).reduce((acc, item) => {
                     acc[item] = true;
@@ -2509,8 +2952,7 @@ class UsageBarChartComponent extends React.Component {
             xAxis: {
                 type: 'category',
                 data: (Object.keys(usage).map((date)=>{
-                    return monthMapping[Number(date.slice(5,7))]['uk'] + ' ' + date.slice(0, 4);
-                
+                    return monthMapping[Number(date.slice(5,7))] + ' ' + date.slice(0, 4);
                 })).concat('Усереднене\n(12 міс)'),
                 axisLabel: {
                     interval: 0,
@@ -2649,10 +3091,11 @@ class UsageBarChartComponent extends React.Component {
     }
 
     componentDidUpdate() {
+        const intl = this.context;
         let usage = this.props.detailedUsage;
         let averageUsage = this.props.averageUsage;
         let series = [];
-        let seriesData = {}
+        let seriesData = {};
         Object.keys(usage).forEach((date, i) => {
             Object.keys(usage[date]).sort().forEach((vaccine, j) => {
                 seriesData[vaccine] ? (seriesData[vaccine].push(usage[date][vaccine])) : (seriesData[vaccine] = [usage[date][vaccine]]);
@@ -2660,26 +3103,67 @@ class UsageBarChartComponent extends React.Component {
         });
 
         Object.keys(seriesData).forEach((vaccine, i) => {
+            // let vaccine_translated = intl.formatMessage({id:`direct-translation.${vaccine}`, defaultMessage:vaccine});
             seriesData[vaccine].push(Math.round(averageUsage[vaccine]));
             series.push({
-                data: seriesData[vaccine]
+                data: seriesData[vaccine],
+                name: vaccine
             });
         });
 
         this.chart.setOption({
+            title: {
+                text: intl.formatMessage({id: "leftovers.infographics.no-usage.usageBarChart.title", defaultMessage:"Використання вакцин"}),
+            },
             xAxis: {
                 data: (Object.keys(usage).map((date)=>{
-                    return monthMapping[Number(date.slice(5,7))]['uk'] + ' ' + date.slice(0, 4);
+                    return intl.formatMessage({id: `direct-translation.${monthMapping[Number(date.slice(5,7))]}`, defaultMessage:monthMapping[Number(date.slice(5,7))]}) + ' ' + date.slice(0, 4);
                 
-                })).concat('Усереднене\n(12 міс)'),
+                })).concat(intl.formatMessage({id: "leftovers.infographics.no-usage.usageBarChart.averaged-usage-bar", defaultMessage:"Усереднене\n(12 міс)"})),
             },
+            legend: {
+                formatter: (el) => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})
+            },
+            tooltip: {
+                formatter: (params) => {
+                    let vaccine = intl.formatMessage({id:`direct-translation.${params.seriesName}`, defaultMessage: params.seriesName});
+                    let tooltip = `<b>${vaccine}</b><br/>`;
+
+                    tooltip += `<div class="is-flex is-justify-content-space-between mt-2">
+                        <span class="mr-3">
+                            <svg height="10" width="10">
+                                <circle cx="5" cy="5" r="5" fill="${params.color.colorStops[1].color}"/>
+                            </svg>
+                            ${params.name}
+                        </span> 
+                        <b>${params.value}</b>
+                        </div>
+                    `;
+
+                    return tooltip;
+                }
+            },
+
             series,
+
+            toolbox: {
+                feature: {
+                    myRestore: {
+                        title: intl.formatMessage({id:'direct-translation.RESTORE', defaultMessage:'Відновити'}),
+                    },
+                    myTool1: {
+                        title: intl.formatMessage({id:'direct-translation.SHOW-HIDE-LEGEND', defaultMessage:'Показати/приховати легенду'})
+                    },
+                }
+            }
         });
     
     }
 }
 
 class UsageTrendsBarChartComponent extends React.Component {
+    static contextType = IntlContext;
+
     onChartInitialized = (chart) => {
         let trends = this.props.usageTrends;
         this.chart = chart;
@@ -2693,8 +3177,6 @@ class UsageTrendsBarChartComponent extends React.Component {
                 dimension: 0,
                 inRange: {
                     color: [
-                        //'#f7797c',
-                        //'#d8ffc8',
                         '#ff421a',
                         'hsl(0, 0%, 92%)',
                         '#c8ffb2',
@@ -2713,9 +3195,7 @@ class UsageTrendsBarChartComponent extends React.Component {
                     color: 'hsl(0, 0%, 96%)'
                 },
             },
-            title: {
-                text: "Тренди використання (одиниць на місяць)",
-            },
+            
             textStyle: {
                 color: 'hsl(0, 0%, 96%)'
             },
@@ -2757,7 +3237,6 @@ class UsageTrendsBarChartComponent extends React.Component {
             },
             series: [
             {
-                name: 'Приріст/Спад',
                 type: 'bar',
             }]
         });
@@ -2775,19 +3254,25 @@ class UsageTrendsBarChartComponent extends React.Component {
     }
 
     componentDidUpdate() {
+        const intl = this.context;
+
         let [maxValue, minValue] = [Math.max(...Object.values(this.props.usageTrends)), Math.min(...Object.values(this.props.usageTrends))];
         let absMax = Math.max(Math.abs(maxValue), Math.abs(minValue));
         this.chart.setOption({
+            title: {
+                text: intl.formatMessage({id:`leftovers.infographics.no-usage.trends-chart.title`, defaultMessage:"Тренди використання (Приріст/Спад)"}),
+            },
             visualMap: {
                 max: absMax/2,
                 min: -absMax/2,
                 text: ['≤'+(absMax/2).toFixed(0), '≥'+(-absMax/2).toFixed(0)],
             },
             yAxis: {
-                data: Object.keys(this.props.usageTrends),
+                data: Object.keys(this.props.usageTrends).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
             },
             series: [
             {
+                name: intl.formatMessage({id:`leftovers.infographics.no-usage.trends-chart.series-name`, defaultMessage:"Доз на місяць"}),
                 data: Object.values(this.props.usageTrends),
             }]
         });
@@ -2795,6 +3280,8 @@ class UsageTrendsBarChartComponent extends React.Component {
 }
 
 class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
+    static contextType = IntlContext;
+
     state = {
         active: 3,
     };
@@ -2881,24 +3368,24 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <p className="title is-6 has-text-centered has-text-white my-2">Необхідний обсяг поставок вакцини (доз) для забезпечення потреб регіону на:</p>
+                <p className="title is-6 has-text-centered has-text-white my-2"><FormattedMessage id="leftovers.infographics.required-supply.title" defaultMessage="Необхідний обсяг поставок вакцини (доз) для забезпечення потреб регіону на:"/></p>
                 <div className="columns">
                     <div className={this.state.active == 3 ? "column active" : "column"} onClick={() => this.changeActiveChart(3)}>
-                        <p className="title has-text-white">Три місяці</p>
+                        <p className="title has-text-white"><FormattedMessage id="leftovers.infographics.required-supply.three-month" defaultMessage="Три місяці"/></p>
                         <ChartComponent
                             id="three-month-required-supply-chart"
                             onChartInitialized={this.threeMonthInitializer}
                         />
                     </div>
                     <div className={this.state.active == 6 ? "column active" : "column"} onClick={() => this.changeActiveChart(6)}>
-                        <p className="title has-text-white">Шість місяців</p>
+                        <p className="title has-text-white"><FormattedMessage id="leftovers.infographics.required-supply.six-month" defaultMessage="Шість місяців"/></p>
                         <ChartComponent
                             id="six-month-required-supply-chart"
                             onChartInitialized={this.sixMonthInitializer}
                         />
                     </div>
                     <div className={this.state.active == 12 ? "column active" : "column"} onClick={() => this.changeActiveChart(12)}>
-                        <p className="title has-text-white">Рік</p>
+                        <p className="title has-text-white"><FormattedMessage id="leftovers.infographics.required-supply.year" defaultMessage="Рік"/></p>
                         <ChartComponent
                             id="twelve-month-required-supply-chart"
                             onChartInitialized={this.twelveMonthInitializer}
@@ -2918,7 +3405,8 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
         grandparent.style.setProperty('--grandparent-width', width + 'px');
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps, prevState) {
+        const intl = this.context;
         Object.values(this.charts).forEach(chart=>chart.resize());
 
         const region = this.props.selectedRegion;
@@ -2946,7 +3434,7 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
 
             this.charts[months].setOption({
                 xAxis: {
-                    data: Object.keys(requiredSupply),
+                    data: Object.keys(requiredSupply).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
                 },
                 series: [
                 {
@@ -2955,7 +3443,7 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
                     symbolSize: 50,
                     symbolRepeat: 'fixed',
                     symbolClip: true,
-                    name: 'Одиниць вакцини',
+                    name: intl.formatMessage({id:`leftovers.infographics.required-supply.series-name`, defaultMessage:'Одиниць вакцини'}),
                     data: Object.values(requiredSupply),
                 }]
             });
@@ -2992,7 +3480,9 @@ class App extends React.Component {
                 '#FEA13F',
                 '#80DED9'
             ],
-            charts: []
+            charts: [],
+            language: navigator.language.slice(0, 2), // Initial language from browser
+            //language: 'en' // Initial language from browser
         }
     }
 
@@ -3005,16 +3495,39 @@ class App extends React.Component {
         ));
     }
 
+    setLanguage = (newLanguage) => this.setState({ language: newLanguage });
+
+    messages = (locale) => {
+        switch (locale) {
+            case 'en':
+                return enMessages;
+            case 'uk':
+                return ukMessages;
+            default:
+                return ukMessages; // Fallback to Ukrainian
+        }
+    };      
+
 
     render() {
+        const { language } = this.state;
+
         return (
-            <div>
-                <HeadSectionComponent />
-                <RegionalChartSectionComponent vaccineColors={this.state.vaccineColors} addNewChart={this.addNewChart} />
-                <RegionalTextSectionComponent dataWithUsage={this.state.dataWithUsage} />
-                <InstitutionalComponent addNewChart={this.addNewChart} />
-                <LeftoversUsageExpirationComponent dataWithUsage={this.state.dataWithUsage} addNewChart={this.addNewChart}/>
-            </div>
+            <IntlProvider locale={language} messages={this.messages(language)} supportedLocales={['en', 'uk']}>
+                <LanguageContext.Provider value={{ language, setLanguage:this.setLanguage }}>
+                    <LanguageContext.Consumer>
+                        {({ language, setLanguage }) => (
+                        <div>
+                            <HeadSectionComponent setLanguage={setLanguage}/>
+                            <RegionalChartSectionComponent vaccineColors={this.state.vaccineColors} addNewChart={this.addNewChart} language={language}/>
+                            <RegionalTextSectionComponent dataWithUsage={this.state.dataWithUsage} language={language}/>
+                            <InstitutionalComponent addNewChart={this.addNewChart} language={language}/>
+                            <LeftoversUsageExpirationComponent dataWithUsage={this.state.dataWithUsage} addNewChart={this.addNewChart} language={language}/>
+                        </div>
+                        )}
+                    </LanguageContext.Consumer>
+                </LanguageContext.Provider>
+            </IntlProvider>
         );
     }
 

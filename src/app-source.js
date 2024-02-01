@@ -16,16 +16,19 @@ const allVaccines = /*{}*/;
 const LanguageContext = createContext();
 
 let vaccineColors = [
-    '#ff9074',
+    '#B66869',
+    // '#ff9074',
     '#ffb09c',
+    '#f8a83c',
+    '#E7CF8D',
     '#00cd97',
-    '#21ffc5',
+    // '#21ffc5',
     '#74ffda',
     '#4fd7ca',
-    '#6dddd3',
+    // '#6dddd3',
     '#8ae4dc',
     '#b6ff97',
-    '#bfffa4',
+    // '#bfffa4',
     '#daffcb',
     '#12aafd',
     '#4dbffd',
@@ -3504,7 +3507,7 @@ class App extends React.Component {
             case 'uk':
                 return ukMessages;
             default:
-                return ukMessages; // Fallback to Ukrainian
+                return enMessages; // Fallback to Ukrainian
         }
     };      
 

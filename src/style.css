@@ -257,6 +257,7 @@ section {
 }
 
 #section-3 #search-container .message.search-result {
+    display: none;
     border-radius: 10px;
 }
 #section-3 #search-container .message.search-result .message-header {

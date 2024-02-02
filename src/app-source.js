@@ -1,6 +1,8 @@
 import React, {Component, createContext, useContext} from 'react';
 import ReactDOM from 'react-dom';
 import { IntlProvider, FormattedMessage, IntlContext } from 'react-intl';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 import enMessages from '../translations/en/ui.json';
 import ukMessages from '../translations/uk/ui.json';
@@ -12,10 +14,17 @@ const clg = console.log;
 const REPORT_DATE = new Date("/*{}*/");
 const ukraineTopoJSON = /*{}*/;
 const allVaccines = /*{}*/;
+const exportToXLSX = (data, fileName = 'export.xlsx')  => {
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+    saveAs(new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileName);
+  };
 
 const LanguageContext = createContext();
 
-let vaccineColors = [
+const vaccineColors = [
     '#B66869',
     // '#ff9074',
     '#ffb09c',
@@ -26,7 +35,7 @@ let vaccineColors = [
     '#74ffda',
     '#4fd7ca',
     // '#6dddd3',
-    '#8ae4dc',
+    '#afd2c9',
     '#b6ff97',
     // '#bfffa4',
     '#daffcb',
@@ -347,6 +356,8 @@ class RegionalChartSectionComponent extends React.Component {
         }, {});
         let regions = this.state.regions.map(el => el == 'Україна' ? intl.formatMessage({id:"direct-translation.НацСклади", defaultMessage:"НацСклади"}) : intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
         
+        clg(regions, vaccines, data);
+
         let series = [];
         for (let el in data) {
             series.push({
@@ -373,9 +384,10 @@ class RegionalChartSectionComponent extends React.Component {
         }
 
         let showLegend = true;
+        const title = intl.formatMessage({id:"regional.chart.title", defaultMessage:"Залишки вакцин у регіонах"})
         this.chart.setOption({
             title: {
-                text: intl.formatMessage({id:"regional.chart.title", defaultMessage:"Залишки вакцин у регіонах"}),
+                text: title,
             },
             legend: {
                 type: 'plain',
@@ -430,7 +442,7 @@ class RegionalChartSectionComponent extends React.Component {
                             });
                         }
                     },
-                    myTool1: {
+                    myToggleLegend: {
                         show: true,
                         title: intl.formatMessage({id:'direct-translation.SHOW-HIDE-LEGEND', defaultMessage:'Показати/приховати легенду'}),
                         icon: 'path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891',
@@ -441,6 +453,18 @@ class RegionalChartSectionComponent extends React.Component {
                             })
                         }
                     },
+                    mySaveData: {
+                        show: true,
+                        title: intl.formatMessage({id:'direct-translation.EXPORT-TO-EXCEL', defaultMessage:'Експортувати в Excel'}),
+                        icon: 'path://M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM11 12C10.4477 12 10 12.4477 10 13V17V21C10 21.5523 10.4477 22 11 22H15H21C21.5523 22 22 21.5523 22 21V17V13C22 12.4477 21.5523 12 21 12H15H11ZM12 16V14H14V16H12ZM16 16V14H20V16H16ZM16 20V18H20V20H16ZM14 18V20H12V18H14Z',
+                        onclick: function () {
+                            const aoa = [[''].concat(regions)];
+                            for (let vacName of vaccines) {
+                                aoa.push([vacName].concat(data[vacName]));
+                            }
+                            exportToXLSX(aoa, title+'.xlsx');
+                        }
+                    }
                 }
             }
         });
@@ -1378,7 +1402,7 @@ class InstitituionalStatsReportComponent extends React.Component {
                                                         </p>
                                                         <p className="title is-5 is-inline has-text-light mr-2">{filteredData.at(-1).value}</p>
                                                         <p className="heading is-5 is-inline has-text-light">
-                                                            <FormattedMessage id="direct-translation.UNITS" defaultMessage="одиниць" />
+                                                            <FormattedMessage id="direct-translation.UNITS" defaultMessage="доз" />
                                                         </p>
                                                         </>
                                                     ) : (
@@ -1406,12 +1430,12 @@ class InstitituionalStatsReportComponent extends React.Component {
                                                 ≤ {vaccine.facilities[vaccine_quantile_index].value}
                                             </p>
                                             <p className="heading is-5 is-inline has-text-light">
-                                                <FormattedMessage id="direct-translation.UNITS" defaultMessage="одиниць" />
+                                                <FormattedMessage id="direct-translation.UNITS" defaultMessage="доз" />
                                             </p>
                                         </div>
                                         <div className="has-text-centered my-1">
                                             <p className="heading is-5 is-inline has-text-light mr-2">
-                                                <FormattedMessage id="institutional.text-section.stats.no-vaccine-at" defaultMessage="Жодної одиниці вакцини в" />
+                                                <FormattedMessage id="institutional.text-section.stats.no-vaccine-at" defaultMessage="Жодної дози вакцини в" />
                                             </p>
                                             <p className="title is-5 is-inline has-text-light mr-2">
                                                 <span className={facilitiesReportingNoVaccine.length == 0 ? "has-text-success" : "has-text-warning"}>{facilitiesReportingNoVaccine.length}</span> + <span className={(facilities_in_region - vaccine.facilities.length) == 0 ? "has-text-success" : "has-text-danger"}>{facilities_in_region - vaccine.facilities.length}</span>
@@ -1525,7 +1549,7 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
 
                             <div className="checkbox-wrapper usage-includer" onClick={this.props.onIncludeUsageClicked}>
                                 <input id="check" type="checkbox" className="plus-minus" checked={this.props.includeUsage} onChange={this.props.onIncludeUsageClicked}/>
-                                <p className="has-text-white-ter"><b>{this.props.includeUsage ?  <FormattedMessage id="leftovers.chart.usage-switch.overall-stats" defaultMessage="Показати Загальну Статистику"/> : <FormattedMessage id="leftovers.chart.usage-switch.usage-included-stats" defaultMessage="Показати Статистику на Основі Використання"/>}?</b></p>
+                                <p className="has-text-white-ter"><b>{this.props.includeUsage ?  <FormattedMessage id="leftovers.chart.usage-switch.overall-stats" defaultMessage="Показати Загальну Статистику"/> : <FormattedMessage id="leftovers.chart.usage-switch.usage-included-stats" defaultMessage="Показати Статистику на Основі Споживання"/>}?</b></p>
                             </div>
                         </div>
                     </div>
@@ -2768,14 +2792,14 @@ class UsageRequiredToAvoidExpirationChartComponent extends React.Component {
 
         this.chart.setOption({
             title: {
-                text: intl.formatMessage({id:`leftovers.infographics.usage-to-avoid-losses.title`, defaultMessage:"Необхідне збільшення споживання\n(одиниць на місяць)"}),
+                text: intl.formatMessage({id:`leftovers.infographics.usage-to-avoid-losses.title`, defaultMessage:"Необхідне збільшення споживання\n(доз на місяць)"}),
             },
             xAxis: {
                 data: Object.keys(requiredUsageIncreases).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
             },
             series: [
             {
-                name: intl.formatMessage({id:`leftovers.infographics.usage-to-avoid-losses.series-name`, defaultMessage:"Одиниць на місяць"}),
+                name: intl.formatMessage({id:`leftovers.infographics.usage-to-avoid-losses.series-name`, defaultMessage:"Доз на місяць"}),
                 data: Object.values(requiredUsageIncreases),
             }]
         });
@@ -3116,7 +3140,7 @@ class UsageBarChartComponent extends React.Component {
 
         this.chart.setOption({
             title: {
-                text: intl.formatMessage({id: "leftovers.infographics.no-usage.usageBarChart.title", defaultMessage:"Використання вакцин"}),
+                text: intl.formatMessage({id: "leftovers.infographics.no-usage.usageBarChart.title", defaultMessage:"Споживання вакцин"}),
             },
             xAxis: {
                 data: (Object.keys(usage).map((date)=>{
@@ -3263,7 +3287,7 @@ class UsageTrendsBarChartComponent extends React.Component {
         let absMax = Math.max(Math.abs(maxValue), Math.abs(minValue));
         this.chart.setOption({
             title: {
-                text: intl.formatMessage({id:`leftovers.infographics.no-usage.trends-chart.title`, defaultMessage:"Тренди використання (Приріст/Спад)"}),
+                text: intl.formatMessage({id:`leftovers.infographics.no-usage.trends-chart.title`, defaultMessage:"Тренди споживання (Приріст/Спад)"}),
             },
             visualMap: {
                 max: absMax/2,
@@ -3446,7 +3470,7 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
                     symbolSize: 50,
                     symbolRepeat: 'fixed',
                     symbolClip: true,
-                    name: intl.formatMessage({id:`leftovers.infographics.required-supply.series-name`, defaultMessage:'Одиниць вакцини'}),
+                    name: intl.formatMessage({id:`leftovers.infographics.required-supply.series-name`, defaultMessage:'Доз вакцини'}),
                     data: Object.values(requiredSupply),
                 }]
             });

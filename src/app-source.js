@@ -20,7 +20,8 @@ const exportToXLSX = (data, fileName = 'export.xlsx')  => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
     const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
     saveAs(new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileName);
-  };
+};
+
 
 const LanguageContext = createContext();
 
@@ -477,13 +478,7 @@ class RegionalTextSectionComponent extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            timed_out_reports: /*{}*/,
-        }
-    }
-    render() {
-        const intl = this.context;
-        const localized_TOP = intl.formatMessage({id: 'direct-translation.TOP', defaultMessage: 'Топ'});
+
         let data = Object.keys(this.props.dataWithUsage).map(region => {
             if (region === 'Україна'){
                 return null;
@@ -510,6 +505,39 @@ class RegionalTextSectionComponent extends React.Component {
         });
 
         data = reverseMapping(data);
+
+        this.state = {
+            data: data,
+            timed_out_reports: /*{}*/,
+        }
+    }
+
+    exportScarceVaccines = () => {
+        const intl = this.context;
+        const data = this.state.data;
+        const aoa = [[intl.formatMessage({id:'direct-translation.VACCINE', defaultMessage:'Вакцина'}), intl.formatMessage({id:'direct-translation.REGIONS', defaultMessage:'Регіони'})]];
+        for (let item of data) {
+            aoa.push([intl.formatMessage({id: `direct-translation.${item.vaccine}`}), item.regions.join(', ')]);
+        }
+        exportToXLSX(aoa, intl.formatMessage({id: "regional.text.scarce-vaccines", defaultMessage: "Дефіцитні вакцини"}) + '.xlsx');
+    }
+
+    exportTimedOutReports = () => {
+        clg(this.state.timed_out_reports);
+        const intl = this.context;
+        const data = this.state.timed_out_reports;
+        const aoa = [[intl.formatMessage({id:'direct-translation.REGION', defaultMessage:'Регіон'}), intl.formatMessage({id:'direct-translation.AMOUNT', defaultMessage:'Кількість'}), intl.formatMessage({id:'direct-translation.FACILITIES', defaultMessage:'Заклади'})]];
+        data.index.forEach((el, i) => {
+            aoa.push([intl.formatMessage({id: `direct-translation.${el}`}), data.data[i][0].toLocaleString(), data.data[i][1].join('\n\n')]);
+        });
+        exportToXLSX(aoa, intl.formatMessage({id: "regional.text.late-reported-leftovers", defaultMessage: "Залишки, прозвітовані більше, ніж 7 днів тому"}) + '.xlsx');
+    }
+
+    render() {
+        const intl = this.context;
+        const localized_TOP = intl.formatMessage({id: 'direct-translation.TOP', defaultMessage: 'Топ'});
+        
+        let data = this.state.data;
 
         return (
             <section id="section-2" className="hero is-fullheight">
@@ -624,12 +652,12 @@ class RegionalTextSectionComponent extends React.Component {
                 <nav className="level is-justify-content-center has-text-light is-mobile mb-5 pb-5">
                     <div className="level-item has-text-centered">
                         <div>
-                            <p className="title is-5 has-text-light mb-3"><FormattedMessage id="regional.text.late-reported-leftovers" defaultMessage="Залишки, прозвітовані більше, ніж 7 днів тому"/></p>
+                            <p className="title is-5 has-text-light mb-3 is-clickable" onClick={this.exportTimedOutReports}><FormattedMessage id="regional.text.late-reported-leftovers" defaultMessage="Залишки, прозвітовані більше, ніж 7 днів тому"/></p>
                             {
                                 this.state.timed_out_reports.index.map((el, i) => {
                                     return (
                                         <p key={i} className="heading is-6 has-text-light mb-2">
-                                            {intl.formatMessage({id: `direct-translation.${el}`, defaultMessage: el})} – {this.state.timed_out_reports.data[i][0].toLocaleString()} ({this.state.timed_out_reports.data[i][1]} {intl.formatMessage({id: `direct-translation.FACILITIES`, defaultMessage: 'закладів'})})
+                                            {intl.formatMessage({id: `direct-translation.${el}`, defaultMessage: el})} – {this.state.timed_out_reports.data[i][0].toLocaleString()} ({this.state.timed_out_reports.data[i][1].length} {intl.formatMessage({id: `direct-translation.FACILITIES`, defaultMessage: 'закладів'})})
                                         </p>
                                     );
                                 })
@@ -639,7 +667,7 @@ class RegionalTextSectionComponent extends React.Component {
                     <div className="level-item full-width">
                         <div className="columns is-multiline is-centered">
                             <div className="column is-full has-text-centered">
-                                <p className="title is-4 has-text-light">
+                                <p className="title is-4 has-text-light is-clickable" onClick={this.exportScarceVaccines}>
                                     <FormattedMessage id="regional.text.scarce-vaccines" defaultMessage="Дефіцитні вакцини"/>:
                                 </p>
                             </div>
@@ -754,6 +782,18 @@ class InstitutionalChartSectionComponent extends React.Component {
 
     state = {
         vaccinePicked: null,
+    }
+
+    exportToExcel = () => {
+        const intl = this.context;
+        const data = this.props.data;
+
+        // const aoa = [['Вакцина', 'Регіон', 'Заклад', 'Кількість']];
+        const aoa = [[intl.formatMessage({id: "direct-translation.VACCINE", defaultMessage: "Вакцина"}), intl.formatMessage({id: "direct-translation.REGION", defaultMessage: "Регіон"}), intl.formatMessage({id: "direct-translation.FACILITY", defaultMessage: "Заклад"}), intl.formatMessage({id: "direct-translation.AMOUNT", defaultMessage: "Кількість"})]];
+        data.forEach( map_of_values => {
+            aoa.push([map_of_values.Name, map_of_values.Rgn, map_of_values.Fclt, map_of_values.Amnt]);
+        });
+        exportToXLSX(aoa, intl.formatMessage({id: "institutional.chart-section.chart-title", defaultMessage: "Залишки вакцин у закладах"}) + '.xlsx');
     }
 
     handleSearch = (value) => {
@@ -989,8 +1029,25 @@ class InstitutionalChartSectionComponent extends React.Component {
                     borderColor: 'rgba(0,0,0, 0.01)',
                     // shadowColor: 'rgba(0, 0, 0, 0.5)',
                 },
-                },
+            },
 
+            toolbox: {
+                show: true,
+                top: 15,
+                right: 15,
+                feature: {
+                    saveAsImage: {
+                        show: true,
+                        backgroundColor: 'auto'
+                    },
+                    mySaveData: {
+                        show: true,
+                        title: intl.formatMessage({id:'direct-translation.EXPORT-TO-EXCEL', defaultMessage:'Експортувати в Excel'}),
+                        icon: 'path://M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM11 12C10.4477 12 10 12.4477 10 13V17V21C10 21.5523 10.4477 22 11 22H15H21C21.5523 22 22 21.5523 22 21V17V13C22 12.4477 21.5523 12 21 12H15H11ZM12 16V14H14V16H12ZM16 16V14H20V16H16ZM16 20V18H20V20H16ZM14 18V20H12V18H14Z',
+                        onclick: this.exportToExcel
+                    }
+                }
+            }
         };
 
         chart.setOption(option);
@@ -1133,6 +1190,23 @@ class InstitutionalChartSectionComponent extends React.Component {
                         // shadowColor: 'rgba(0, 0, 0, 0.5)',
                     },
                 },
+                toolbox: {
+                    show: true,
+                    top: 15,
+                    right: 15,
+                    feature: {
+                        saveAsImage: {
+                            show: true,
+                            backgroundColor: 'auto'
+                        },
+                        mySaveData: {
+                            show: true,
+                            title: intl.formatMessage({id:'direct-translation.EXPORT-TO-EXCEL', defaultMessage:'Експортувати в Excel'}),
+                            icon: 'path://M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM11 12C10.4477 12 10 12.4477 10 13V17V21C10 21.5523 10.4477 22 11 22H15H21C21.5523 22 22 21.5523 22 21V17V13C22 12.4477 21.5523 12 21 12H15H11ZM12 16V14H14V16H12ZM16 16V14H20V16H16ZM16 20V18H20V20H16ZM14 18V20H12V18H14Z',
+                            onclick: this.exportToExcel
+                        }
+                    }
+                }
             });
 
 
@@ -1535,6 +1609,41 @@ class LeftoversUsageExpirationComponent extends React.Component {
 class LeftoversUsageExpirationChartSectionComponent extends React.Component {
     static contextType = IntlContext;
 
+    exportToExcel = () => {
+        clg(this.props.data);
+        const intl = this.context;
+        let titles, aoa;
+
+        if (this.props.selectedRegion == 'Україна'){
+            const data = this.props.data;
+            aoa = [];
+            Object.keys(data).forEach(region => {
+                titles = [intl.formatMessage({id:"direct-translation.REGION", defaultMessage:"Регіон"}), intl.formatMessage({id:"direct-translation.VACCINE", defaultMessage:"Вакцина"})].concat(data[region].index);
+                aoa.push(titles);
+                data[region].columns.forEach((vaccine, i) => {
+                    aoa.push([
+                        intl.formatMessage({id:"direct-translation."+region, defaultMessage:region}), 
+                        intl.formatMessage({id:"direct-translation."+vaccine, defaultMessage:vaccine})
+                    ].concat(data[region].data[i].map(el => el != 'Закінчилась' ? el : intl.formatMessage({id:"direct-translation.Закінчилась", defaultMessage:"Закінчилась"}))));
+                });
+                aoa.push([]);
+            });
+        }
+        else {
+            const data = this.props.data[this.props.selectedRegion];
+            titles = [intl.formatMessage({id:"direct-translation.REGION", defaultMessage:"Регіон"}), intl.formatMessage({id:"direct-translation.VACCINE", defaultMessage:"Вакцина"})].concat(data.index);
+            aoa = [titles];
+            data.columns.forEach((vaccine, i) => {
+                aoa.push([
+                        intl.formatMessage({id:"direct-translation."+this.props.selectedRegion, defaultMessage:this.props.selectedRegion}), 
+                        intl.formatMessage({id:"direct-translation."+vaccine, defaultMessage:vaccine})
+                    ].concat(data.data[i].map(el => el != 'Закінчилась' ? el : intl.formatMessage({id:"direct-translation.Закінчилась", defaultMessage:"Закінчилась"}))));
+            });
+        }
+        exportToXLSX(aoa, this.props.includeUsage ? intl.formatMessage({id:"leftovers.chart.title", defaultMessage:"Прогноз обсягу залишків за використанням"}) : intl.formatMessage({id:"leftovers.chart.title-no-usage", defaultMessage:"Прогноз обсягу залишків за терміном придатності"}));
+        
+    }
+
     render() {
         return (
             <section id="section-5" className="hero is-fullheight">
@@ -1808,6 +1917,12 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                     },
                     myRestore: {
                         title: intl.formatMessage({id:"direct-translation.RESTORE", defaultMessage:'Відновити'}),
+                    },
+                    mySaveData: {
+                        show: true,
+                        title: intl.formatMessage({id:'direct-translation.EXPORT-TO-EXCEL', defaultMessage:'Експортувати в Excel'}),
+                        icon: 'path://M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM11 12C10.4477 12 10 12.4477 10 13V17V21C10 21.5523 10.4477 22 11 22H15H21C21.5523 22 22 21.5523 22 21V17V13C22 12.4477 21.5523 12 21 12H15H11ZM12 16V14H14V16H12ZM16 16V14H20V16H16ZM16 20V18H20V20H16ZM14 18V20H12V18H14Z',
+                        onclick: this.exportToExcel
                     }
                 }
             }

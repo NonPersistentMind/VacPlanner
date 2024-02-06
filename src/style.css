@@ -814,3 +814,7 @@ opacity: 1;
 .is-hidden {
     display: none !important;
 }
+
+.is-clickable {
+    cursor: pointer;
+}

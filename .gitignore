@@ -1,10 +1,12 @@
 __pycache__
 .DS_Store
+node_modules/
+__pycache__/
 
-*/
-
-!Results/
-!Results/History/
-!src/
-!dist
-!docs
+Assets/
+Data/
+Misc/
+Results/Checkup/
+Results/Checkup.zip
+SourceFiles/
+Source/

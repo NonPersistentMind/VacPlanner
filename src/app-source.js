@@ -243,7 +243,7 @@ class RegionalChartSectionComponent extends React.Component {
         }
 
         let showLegend = true;
-        const title = intl.formatMessage({id:"regional.chart.title", defaultMessage:"Залишки вакцин у регіонах"})
+        const title = intl.formatMessage({id:"regional.chart.title", defaultMessage:"Залишки вакцин"})
         this.chart.setOption({
             title: {
                 text: title,

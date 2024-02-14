@@ -82,7 +82,11 @@
     "translations.head.title": "Vaccine Stock for Routine Immunization According to the National Calendar",
     "translations.head.report-date": "Reported on",
 
-    "regional.chart.title": "Regional Vaccine Stock",
+    "menu.regional-info": "Regional Information",
+    "menu.facilities-info": "Health Facilities Information",
+    "menu.stock-forecast": "Stock Forecast",
+
+    "regional.chart.title": "Vaccine Stock",
 
     "regional.text.regional": "Regional",
     "regional.text.info": "Information",
@@ -124,7 +128,7 @@
     "leftovers.infographics.no-usage.vaccines-expiration-by-dates.units": "doses expiring throughout the year",
 
     "leftovers.infographics.no-usage.usageBarChart.title": "Vaccine Consumption",
-    "leftovers.infographics.no-usage.usageBarChart.averaged-usage-bar": "Averaged Consumption\n(12 months)",
+    "leftovers.infographics.no-usage.usageBarChart.averaged-usage-bar": "Averaged\nConsumption\n(12 months)",
 
     "leftovers.infographics.no-usage.trends-chart.title": "Consumption Trends (Increase/Decrease)",
     "leftovers.infographics.no-usage.trends-chart.series-name": "Doses per month",

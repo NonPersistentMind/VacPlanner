@@ -23,6 +23,7 @@
 
 html {
     scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
     background-color: black;
 }
 
@@ -55,6 +56,8 @@ section {
     left: 0%;
     background-color: rgba(0, 0, 0, 1);
 }
+
+
 
 #head {
     background-color: color(srgb 0.8962 0.9062 0.9018);
@@ -166,6 +169,17 @@ section {
 
 #section-2>.level>.level-item.full-width {
     flex-shrink: 1;
+}
+
+#section-2 .level-item.full-width>.columns {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 35vh;
+}
+
+#section-2 .level-item.full-width>.columns::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
 }
 
 #institutional-section{

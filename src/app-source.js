@@ -1,182 +1,40 @@
 import React, {Component, createContext, useContext} from 'react';
 import ReactDOM from 'react-dom';
+import ReactGA from 'react-ga';
 import { IntlProvider, FormattedMessage, IntlContext } from 'react-intl';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-import enMessages from '../translations/en/ui.json';
-import ukMessages from '../translations/uk/ui.json';
 import 'bulma/css/bulma.css'; // For Bulma's CSS
 import './style.css'; 
 
+import enMessages from '../translations/en/ui.json';
+import ukMessages from '../translations/uk/ui.json';
 
-const clg = console.log;
+import {
+    clg, 
+    exportToXLSX, 
+    prepareJSONedDataFrame,
+    monthInterval,
+    reverseMapping,
+} from './js/misc.js';
+import {
+    vaccineColors, 
+    monthMapping, 
+    globalOption,
+} from './js/config.js';
+import MenuComponent from './js/VaccineStock/App/Menu/Menu.js';
+import HeadSectionComponent from './js/VaccineStock/HeadSection/Head.js';
+
+
 const REPORT_DATE = new Date("/*{}*/");
 const ukraineTopoJSON = /*{}*/;
 const allVaccines = /*{}*/;
-const exportToXLSX = (data, fileName = 'export.xlsx')  => {
-    const worksheet = XLSX.utils.aoa_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
-    saveAs(new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileName);
-};
-
 
 const LanguageContext = createContext();
 
-const vaccineColors = [
-    '#B66869',
-    // '#ff9074',
-    '#ffb09c',
-    '#f8a83c',
-    '#E7CF8D',
-    '#00cd97',
-    // '#21ffc5',
-    '#74ffda',
-    '#4fd7ca',
-    // '#6dddd3',
-    '#afd2c9',
-    '#b6ff97',
-    // '#bfffa4',
-    '#daffcb',
-    '#12aafd',
-    '#4dbffd',
-    '#89d4fe',
-];
-
-let monthMapping = {
-    1: 'Січень', 
-    2: 'Лютий', 
-    3: 'Березень', 
-    4: 'Квітень', 
-    5: 'Травень', 
-    6: 'Червень', 
-    7: 'Липень', 
-    8: 'Серпень', 
-    9: 'Вересень', 
-    10: 'Жовтень', 
-    11: 'Листопад', 
-    12: 'Грудень', 
-};
-
 echarts.registerMap('Ukraine', ukraineTopoJSON);
 
-const globalOption = {
-    textStyle: {
-        fontFamily: 'monospace',
-    },
-    title: {
-        textStyle: {
-            fontFamily: 'monospace'
-        }
-    },
-    legend: {
-        textStyle: {
-            fontFamily: 'monospace'
-        }
-    },
-}
-
-function prepareJSONedDataFrame(data, restrictZeroes = true) {
-    for (let reg in data) {
-        data[reg] = JSON.parse(data[reg]);
-    }
-
-    // "Transpose" an array of arrays in data
-    for (let reg in data) {
-        let columns = data[reg].columns;
-        let index = data[reg].index;
-        let values = data[reg].data;
-        let new_values = [];
-        for (let i = 0; i < columns.length; i++) {
-            let new_value = [];
-            let first = true;
-            for (let j = 0; j < index.length; j++) {
-                if (restrictZeroes) {
-                    if (values[j][i]) {
-                        new_value.push(values[j][i]);
-                    }
-                    else if (first) {
-                        new_value.push(values[j][i]);
-                        first = false;
-                    }
-                    else {
-                        new_value.push("Закінчилась");
-                    }
-                }
-                else {
-                    new_value.push(values[j][i]);
-                }
-            }
-            new_values.push(new_value);
-        }
-        data[reg].data = new_values;
-        // data[reg].index = data[reg].index.map(el => new Date(el));
-    }
-}
-
-function monthInterval(d1, d2) {
-    var months;
-    const roundPoint = 0.1;
-    months = (d2.getFullYear() - d1.getFullYear()) * 12;
-    months -= d1.getMonth();
-    months += d2.getMonth();
-    months += Math.round(((d2.getDate() - d1.getDate()) / 30) / roundPoint) * roundPoint;
-    return months <= 0 ? 0 : months.toFixed(1);
-}
-
-function reverseMapping(data) {
-    let result = {};
-
-    data.forEach(item => {
-        if (item !== null) {
-            item.insufficientVaccines.forEach(vaccine => {
-                if (!result[vaccine]) {
-                    result[vaccine] = [];
-                }
-                result[vaccine].push(item.region);
-            });
-        }
-    });
-
-    return Object.keys(result).map(vaccine => ({ vaccine, regions: result[vaccine] }));
-}
-
-
-class HeadSectionComponent extends React.Component {
-    render() {
-        return (
-            <section id="head" className="hero is-fullheight">
-                <div className="hero-body is-justify-content-center">
-                    <div className="logo-holder is-flex is-justify-content-space-between">    
-                        <img id="mhu-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Emblem_of_the_Ministry_of_Health_of_Ukraine.svg/2880px-Emblem_of_the_Ministry_of_Health_of_Ukraine.svg.png"
-                        alt="" />
-                        <img id="phc-logo" src="https://i.ibb.co/Z12PJJs/logo-cgz.png" alt="logo-cgz" border="0"/>
-                    </div>
-                    <div className="title-holder has-text-centered pb-5">
-                        <p className="heading is-size-2 mb-5">
-                            <b>
-                                <FormattedMessage 
-                                    id="translations.head.title" 
-                                    defaultMessage="Залишки вакцин для проведення профілактичних щеплень відповідно до Національного календаря"
-                                />
-                            </b>
-                        </p>
-                        <p className="title is-size-3">
-                            <FormattedMessage 
-                                id="translations.head.report-date" 
-                                defaultMessage="Звіт станом на"
-                            /> {REPORT_DATE.toLocaleDateString("uk-UA")}
-                        </p>
-                    </div>
-                    {/*<img src="https://i.ibb.co/313XX6f/Designer-2.jpg" alt="Designer-2" border="0"/>*/}
-                    <img src="https://i.ibb.co/xDx1MrX/Designer.jpg" alt="Designer" border="0"/>
-                </div>
-            </section>
-        )
-    }
-}
 
 
 class RegionalChartSectionComponent extends React.Component {
@@ -1987,52 +1845,52 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
 
         const PHRASES = [
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-1-1" defaultMessage="А хто це в нас такий молодець, у якого нічого не псується?"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-1-1" defaultMessage="А хто це в нас такий молодець, у якого нічого не псується?" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-1-2" defaultMessage="Так це ж {region}!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-1" defaultMessage="А ну гляньте, хто це тут без проблем?"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-1" defaultMessage="А ну гляньте, хто це тут без проблем?" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-2" defaultMessage="Здається, це {region}!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-1" defaultMessage="О, які ми молодці!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-1" defaultMessage="О, які ми молодці!" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-2" defaultMessage="А хто точно молодець? А {region} молодець!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-1" defaultMessage="А ось і наша молодчинка!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-1" defaultMessage="А ось і наша молодчинка!" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-2" defaultMessage="Ей, {region}, йди шепну на вушко: ти просто зірка!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-1" defaultMessage="Хто тут без проблем?"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-1" defaultMessage="Хто тут без проблем?" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-2" defaultMessage="Очевидно! Це ж {region}!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-1" defaultMessage="Ура!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-1" defaultMessage="Ура!" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-2" defaultMessage="А {region} таки вміє показати як вживати вакцину!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-1" defaultMessage="Ого, ну і дає {region}!" values={{region}}/>
                 <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-2" defaultMessage="Ну у вас же все просто бімба!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-2" defaultMessage="Ну у вас же все просто бімба!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-1" defaultMessage="Вітаємо, {region}!" values={{region}}/>
                 <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-2" defaultMessage="Знаєте, чому ми усміхаємось? Бо вакцина у вас не псується!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-2" defaultMessage="Знаєте, чому ми усміхаємось? Бо вакцина у вас не псується!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-1" defaultMessage="Так тримати, {region}!" values={{region}}/>
                 <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-2" defaultMessage="Не знаю, як у інших, а у вас усе супер!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-2" defaultMessage="Не знаю, як у інших, а у вас усе супер!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-1" defaultMessage="Хто тут найкращий?"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-1" defaultMessage="Хто тут найкращий?" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-2" defaultMessage="Безумовно, {region}!" values={{region}}/>
             </React.Fragment>,
@@ -2042,17 +1900,17 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-11-2" defaultMessage="Чому? Бо у вас усе бомбезно!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-1" defaultMessage="Ось хто точно знає, як треба працювати!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-1" defaultMessage="Ось хто точно знає, як треба працювати!" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-2" defaultMessage='В сенсі "хто?"? Звичайно, {region}!' values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-1" defaultMessage="А ось і наш чемпіон!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-1" defaultMessage="А ось і наш чемпіон!" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-2" defaultMessage="Так-так, {region}, ви просто супер!" values={{region}}/>
             </React.Fragment>,
             (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-1" defaultMessage="Чому це тут не відображаються проблеми?"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-1" defaultMessage="Чому це тут не відображаються проблеми?" values={{region}}/>
                 <br/>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-2" defaultMessage="Елементарно, Ватсон! Бо це ж {region}, тут їх нема!" values={{region}}/>
             </React.Fragment>,
@@ -2068,7 +1926,7 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
             (region) => <React.Fragment>
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-1" defaultMessage="Уау, {region}!" values={{region}}/>
                 <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-2" defaultMessage="Вакцина не псується – то й ЦГЗ сміється!"/>
+                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-2" defaultMessage="Вакцина не псується – то й ЦГЗ сміється!" values={{region}}/>
             </React.Fragment>,
         ];
         const replacement = this.props.selectedRegion == "м. Київ" ? 
@@ -3605,26 +3463,8 @@ class App extends React.Component {
 
         this.state = {
             dataWithUsage,
-            vaccineColors: [
-                '#FF0000',
-                '#102542',
-                '#E4FF1A',
-                '#FDBF7E',
-                '#2E2532',
-                '#FBFBFB',
-                '#C8C6C9',
-                '#2374AB',
-                '#508991',
-                '#820263',
-                '#C1666B',
-                '#BB4430',
-                '#A40E4C',
-                '#FEA13F',
-                '#80DED9'
-            ],
             charts: [],
             language: navigator.language.slice(0, 2), // Initial language from browser
-            //language: 'en' // Initial language from browser
         }
     }
 
@@ -3646,7 +3486,7 @@ class App extends React.Component {
             case 'uk':
                 return ukMessages;
             default:
-                return enMessages; // Fallback to Ukrainian
+                return enMessages; // Fallback to English
         }
     };      
 
@@ -3660,7 +3500,8 @@ class App extends React.Component {
                     <LanguageContext.Consumer>
                         {({ language, setLanguage }) => (
                         <div>
-                            <HeadSectionComponent setLanguage={setLanguage}/>
+                            <MenuComponent />
+                            <HeadSectionComponent setLanguage={setLanguage} reportDate={REPORT_DATE}/>
                             <RegionalChartSectionComponent vaccineColors={this.state.vaccineColors} addNewChart={this.addNewChart} language={language}/>
                             <RegionalTextSectionComponent dataWithUsage={this.state.dataWithUsage} language={language}/>
                             <InstitutionalComponent addNewChart={this.addNewChart} language={language}/>
@@ -3674,6 +3515,8 @@ class App extends React.Component {
     }
 
     componentDidMount() {
+        ReactGA.initialize('G-TVYW5B1W6C');
+        ReactGA.pageview(window.location.pathname + window.location.search);
         window.onresize = () => this.state.charts.forEach(el => el.resize());
     }
 }

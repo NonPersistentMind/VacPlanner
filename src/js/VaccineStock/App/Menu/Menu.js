@@ -11,19 +11,19 @@ export default function MenuComponent() {
             </div>
             <a href="#section-1" className="menu-item">
                 <img src="https://i.ibb.co/HDcW50c/Designer-8.png" alt="Designer-8" border="0"/>
-                <p className="title is-4 has-text-dark">
+                <p className="title is-4 has-text-dark ml-5">
                     <FormattedMessage id="menu.regional-info" defaultMessage="Регіональна Інформація"/>
                 </p>
             </a>
             <a href="#section-3" className="menu-item">
                 <img src="https://i.ibb.co/P1t9YhN/Designer-1.png" alt="Designer-1" border="0"/>
-                <p className="title is-4 has-text-dark">
+                <p className="title is-4 has-text-dark ml-5">
                     <FormattedMessage id="menu.facilities-info" defaultMessage="Залишки рівня ЗОЗ"/>
                 </p>
             </a>
             <a href="#section-5" className="menu-item">
                 <img src="https://i.ibb.co/FgVcDDV/Designer-4.png" alt="Designer-4" border="0"/>
-                <p className="title is-4 has-text-dark">
+                <p className="title is-4 has-text-dark ml-5">
                     <FormattedMessage id="menu.stock-forecast" defaultMessage="Прогноз Залишків"/>
                 </p>
             </a>

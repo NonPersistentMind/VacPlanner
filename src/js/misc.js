@@ -1,4 +1,6 @@
 export const clg = console.log;
+import * as XLSX from 'xlsx';
+
 
 export const exportToXLSX = (data, fileName = 'export.xlsx')  => {
     const worksheet = XLSX.utils.aoa_to_sheet(data);
@@ -72,4 +74,33 @@ export function reverseMapping(data) {
     });
 
     return Object.keys(result).map(vaccine => ({ vaccine, regions: result[vaccine] }));
+}
+
+export const regionPositions = {
+    'Вінницька': 0,
+    'Волинська': 1,
+    'Дніпропетровська': 2,
+    'Донецька': 3,
+    'Житомирська': 4,
+    'Закарпатська': 5,
+    'Запорізька': 6,
+    'Івано-Франківська': 7,
+    'Київська': 8,
+    'Кіровоградська': 9,
+    'Львівська': 10,
+    'Миколаївська': 11,
+    'НацСклади':11.5,
+    'Одеська': 12,
+    'Полтавська': 13,
+    'Рівненська': 14,
+    'Сумська': 15,
+    'Тернопільська': 16,
+    'Україна': 17,
+    'Харківська': 17+1,
+    'Херсонська': 18+1,
+    'Хмельницька': 19+1,
+    'Черкаська': 20+1,
+    'Чернівецька': 21+1,
+    'Чернігівська': 22+1,
+    'м. Київ': 23+1
 }

@@ -115,12 +115,23 @@ section {
     width: 10.5vmax;
 }
 
+#section-1 .regional-foundsource-filter {
+    position: absolute;
+    top: 60px;
+    right: 1.9vmax;
+
+    width: 20vw;
+    z-index: 1;
+}
+
 #section-2 {
     /*
     background: linear-gradient(to bottom, black 0%, black 50%, #1F2632 50%, #1F2632 100%);
     */
+    position: relative;
     background-color: black;
     height: 100vh;
+    padding-bottom: 25px;
 }
 
 #section-2>.background {
@@ -831,4 +842,8 @@ opacity: 1;
 
 .is-clickable {
     cursor: pointer;
+}
+
+.is-bold {
+    font-weight: bold;
 }

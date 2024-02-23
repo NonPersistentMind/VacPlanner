@@ -24,6 +24,7 @@
 
 .menu a {
     text-decoration: none;
+    text-align: end;
     color: rgb(26, 26, 26);
 
     width: 80%;
@@ -35,8 +36,7 @@
 }
 
 .menu img {
-    width: 5rem;
-    height: 5rem;
+    width: 7rem;
 }
 
 .menu-switch {

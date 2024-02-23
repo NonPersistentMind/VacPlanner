@@ -10,6 +10,7 @@ matplotlib = "*"
 openpyxl = "*"
 xlrd = "*"
 numpy = "*"
+requests = "*"
 
 [dev-packages]
 

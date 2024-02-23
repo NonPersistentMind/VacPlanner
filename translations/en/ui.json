@@ -77,6 +77,7 @@
     "direct-translation.EXPORT-TO-EXCEL": "Export to Excel",
     
     "direct-translation.Закінчилась": "Ran out",
+    "direct-translation.Фільтр": "Filter",
     
 
     "translations.head.title": "Vaccine Stock for Routine Immunization According to the National Calendar",
@@ -100,6 +101,15 @@
     "regional.text.other": "Additional Information",
     "regional.text.late-reported-leftovers": "Stock reported more than 7 days ago",
     "regional.text.scarce-vaccines": "Scarce Vaccines",
+    "foundsource.filterNames.Джерело фінансування": "Funding Source",
+    "foundsource.державний": "State",
+    "foundsource.бюджет": "budget",
+    "foundsource.гуманітарна": "Humanitarian",
+    "foundsource.допомога": "aid",
+    "foundsource.невідоме": "Unknown",
+    "foundsource.джерело": "Source",
+    "foundsource.невідомий": "missing",
+    "foundsource.рік": "year",
 
 
 
@@ -152,6 +162,9 @@
     "leftovers.infographics.required-supply.six-month":"Six months",
     "leftovers.infographics.required-supply.year":"Year",
     "leftovers.infographics.required-supply.series-name": "Required Doses",
+    "leftovers.infographics.required-supply.three-month-supplied": "Phew, three month done.\nLet's relax for now 🛀",
+    "leftovers.infographics.required-supply.six-month-supplied": "Wow, half a year procured!\nWell, you are real 'management super stars' ⚝",
+    "leftovers.infographics.required-supply.year-supplied": "Oh gosh. That's a year secured!\nFull relax and ✈ to Maldives inevitable. Now.",
 
     "leftovers.infographics.include-usage.funny-phrases-1-1": "And who is this clever one with no wasted vaccine at all?",
     "leftovers.infographics.include-usage.funny-phrases-1-2": "Of course it's {region}!",

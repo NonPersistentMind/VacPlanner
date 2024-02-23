@@ -2,7 +2,6 @@ import React, {Component, createContext, useContext} from 'react';
 import ReactDOM from 'react-dom';
 import ReactGA from 'react-ga';
 import { IntlProvider, FormattedMessage, IntlContext } from 'react-intl';
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
 import 'bulma/css/bulma.css'; // For Bulma's CSS
@@ -17,6 +16,7 @@ import {
     prepareJSONedDataFrame,
     monthInterval,
     reverseMapping,
+    regionPositions
 } from './js/misc.js';
 import {
     vaccineColors, 
@@ -25,6 +25,7 @@ import {
 } from './js/config.js';
 import MenuComponent from './js/VaccineStock/App/Menu/Menu.js';
 import HeadSectionComponent from './js/VaccineStock/HeadSection/Head.js';
+import DropdownComponent from './js/VaccineStock/RegionalSection/DropdownBlock/DropdownComponent';
 
 
 const REPORT_DATE = new Date("/*{}*/");
@@ -36,17 +37,32 @@ const LanguageContext = createContext();
 echarts.registerMap('Ukraine', ukraineTopoJSON);
 
 
-
 class RegionalChartSectionComponent extends React.Component {
     static contextType = IntlContext;
-    state = {
-        vaccines : JSON.parse(
-            '/*{}*/'
-        ),
-        data : JSON.parse(
-            '/*{}*/'
-        ),
-        regions: /*{}*/,
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            data: /*{}*/,
+        }
+
+        const foundSourceArray = new Array(...new Set(this.state.data['Джерело фінансування']));
+        this.state["selectedFilters"] = {
+            'Джерело фінансування': foundSourceArray.reduce((acc, item) => {
+                acc[item] = true;
+                return acc;
+            }, {})
+        };
+    }
+
+    handleFilterChange = (filterName, selectedValues) => {
+        console.log("FilterName: ", filterName);
+        console.log("SelectedValues: ", selectedValues);
+        const selectedFilters = Object.assign({}, this.state.selectedFilters);
+        selectedFilters[filterName] = selectedValues;
+        this.setState({
+            selectedFilters
+        });
     }
 
     render() {
@@ -54,6 +70,13 @@ class RegionalChartSectionComponent extends React.Component {
             <section id="section-1" className="hero is-fullheight">
                 <img
                     src="https://www.cam.ac.uk/sites/www.cam.ac.uk/files/styles/content-885x432/public/news/research/news/gettyimages-1501082127-dp.jpg?itok=v8Y6IdpV" />
+                <div className="regional-foundsource-filter">
+                    <DropdownComponent
+                        filterName="Джерело фінансування"
+                        filterValues={this.state.selectedFilters['Джерело фінансування']}
+                        setFilterValue={this.handleFilterChange}
+                    />
+                </div>
                 <div className="chart" id="section-1-chart"></div>
             </section>
         )
@@ -84,8 +107,8 @@ class RegionalChartSectionComponent extends React.Component {
             }])),
 
             title: {
-                left: '25px',
-                top: '15px',
+                left: '15px',
+                top: '20px',
                 textStyle: {
                     // fontFamily: 'Georgia',
                     fontSize: "1.4rem",
@@ -93,24 +116,44 @@ class RegionalChartSectionComponent extends React.Component {
                 },
             },
 
-            legend: {
-                type: 'plain',
-                left: "center",
-                top: "55px",
-                selectedMode: 'multiple',
-                selected: this.state.vaccines.reduce((acc, item) => {
-                    acc[item] = true;
-                    return acc;
-                }, {}),
-                textStyle: {
-                    fontSize: "15px",
-                    color: '#ccc'
+            dataZoom: [
+                {
+                    type: 'slider',
+                    yAxisIndex: [0],
+                    filterMode: 'empty',
+                    left: 20,
+                    width: 35,
+
+                    textStyle: {
+                        color: 'rgb(255 255 255 / 75%)'
+                    },
+
+                    borderRadius: 10,
+                    borderColor: 'white',
+                    fillerColor: 'rgb(189 208 218 / 75%)',
+
+                    handleStyle: {
+                        borderColor: 'white',
+                    },
+
+                    moveHandleSize: 8,
+                    moveHandleStyle: {
+                        color: 'rgb(189 208 218 / 75%)',
+                        borderColor: 'white',
+                    },
+
+                    emphasis: {
+                        moveHandleStyle: {
+                            color: 'rgb(109 205 255 / 100%)',
+                            borderColor: 'white',
+                        },
+                    }
                 }
-            },
+            ],
 
             xAxis: {
                 type: 'category',
-                data: this.state.regions.map(el => el == 'Україна' ? "НацЗалишки" : el),
+                // data: this.state.regions.map(el => el == 'Україна' ? "НацЗалишки" : el),
                 axisLabel: {
                     interval: 0,
                     rotate: 55,
@@ -156,8 +199,8 @@ class RegionalChartSectionComponent extends React.Component {
             },
 
             grid: {
-                left: '5%',
-                right: '2%',
+                left: '150px',
+                right: '30px',
                 top: '100px',
                 bottom: '110px'
             },
@@ -206,23 +249,52 @@ class RegionalChartSectionComponent extends React.Component {
     }
 
     componentDidUpdate() {
-        let chart = this.chart;
-        let intl = this.context;
-        let vaccines = this.state.vaccines.map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
-        let data = Object.keys(this.state.data).reduce((acc, item) => {
-            acc[intl.formatMessage({id:`direct-translation.${item}`, defaultMessage:item})] = this.state.data[item];
+        const chart = this.chart;
+        const intl = this.context;
+        const nationalStock = intl.formatMessage({id:"direct-translation.НацСклади", defaultMessage:"НацСклади"});
+        
+        let selectedFoundSources = this.state.selectedFilters['Джерело фінансування'];
+        selectedFoundSources = Object.keys(selectedFoundSources).filter(el => selectedFoundSources[el]);
+        
+        // data is a dictionary of the form { 'Регіон': .., 'Джерело фінансування': .., 'Міжнародна непатентована назва': .. , 'Кількість': .. }
+        let data = this.state.data['Регіон'].reduce((acc, item, i) => {
+            // Filter out all the data that does not correspond to the selected found sources 
+            if (selectedFoundSources.includes(this.state.data['Джерело фінансування'][i])) {
+                let vaccine = this.state.data['Міжнародна непатентована назва'][i];
+                vaccine = intl.formatMessage({id:`direct-translation.${vaccine}`, defaultMessage:vaccine});
+                if (!acc[item]) {
+                    acc[item] = {
+                        [vaccine]: this.state.data['Кількість доз'][i]
+                    };
+                }
+                else {
+                    if (acc[item][vaccine]) {
+                        acc[item][vaccine] += this.state.data['Кількість доз'][i]
+                    }
+                    else {
+                        acc[item][vaccine] = this.state.data['Кількість доз'][i]
+                    }
+                }
+            }
             return acc;
         }, {});
-        let regions = this.state.regions.map(el => el == 'Україна' ? intl.formatMessage({id:"direct-translation.НацСклади", defaultMessage:"НацСклади"}) : intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
-        
-        clg(regions, vaccines, data);
+
+        let vaccines_raw = Object.keys(data).reduce((acc, region) => {
+            return new Set([...acc, ...Object.keys(data[region])]);
+        }, new Set());
+        vaccines_raw = Array.from(vaccines_raw);
+        let vaccines = vaccines_raw.map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
+
+        let regions_raw = Object.keys(data).sort((a, b) => regionPositions[a] - regionPositions[b]);
+        let regions = regions_raw.map(el => el == 'Україна' ? nationalStock : intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
 
         let series = [];
-        for (let el in data) {
+        for (let el of vaccines) {
             series.push({
                 name: el,
                 type: 'bar',
                 stack: 'total',
+                barWidth: '70%',
                 label: {
                     show: true,
                     textStyle:{
@@ -238,12 +310,13 @@ class RegionalChartSectionComponent extends React.Component {
                 emphasis: {
                     focus: 'series'
                 },
-                data: data[el]
+                data: Object.values(data).map(regionalVaccines => regionalVaccines[el] || 0)
             });
         }
 
         let showLegend = true;
-        const title = intl.formatMessage({id:"regional.chart.title", defaultMessage:"Залишки вакцин"})
+        const title = intl.formatMessage({id:"regional.chart.title", defaultMessage:"Залишки вакцин"});
+
         this.chart.setOption({
             title: {
                 text: title,
@@ -279,7 +352,7 @@ class RegionalChartSectionComponent extends React.Component {
             toolbox: {
                 show: true,
                 top: 15,
-                right: 15,
+                right: 25,
                 feature: {
                     saveAsImage: {
                         show: true,
@@ -317,17 +390,21 @@ class RegionalChartSectionComponent extends React.Component {
                         title: intl.formatMessage({id:'direct-translation.EXPORT-TO-EXCEL', defaultMessage:'Експортувати в Excel'}),
                         icon: 'path://M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM11 12C10.4477 12 10 12.4477 10 13V17V21C10 21.5523 10.4477 22 11 22H15H21C21.5523 22 22 21.5523 22 21V17V13C22 12.4477 21.5523 12 21 12H15H11ZM12 16V14H14V16H12ZM16 16V14H20V16H16ZM16 20V18H20V20H16ZM14 18V20H12V18H14Z',
                         onclick: function () {
+                            console.log("Data: ", data);
+                            console.log("Vaccines: ", vaccines_raw);
+                            console.log("Regions: ", regions_raw);
                             const aoa = [[''].concat(regions)];
-                            for (let vacName of vaccines) {
-                                aoa.push([vacName].concat(data[vacName]));
+                            for (let vacName of vaccines_raw) {
+                                aoa.push(
+                                    [vacName].concat( regions_raw.map(reg => data[reg][vacName] || 0) ) 
+                                );
                             }
                             exportToXLSX(aoa, title+'.xlsx');
                         }
                     }
                 }
             }
-        });
-
+        }, {replaceMerge: ['series', 'toolbox']});
     }
 }
 
@@ -1929,6 +2006,7 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                 <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-2" defaultMessage="Вакцина не псується – то й ЦГЗ сміється!" values={{region}}/>
             </React.Fragment>,
         ];
+
         const replacement = this.props.selectedRegion == "м. Київ" ? 
             (<span>{intl.formatMessage({id:"leftovers.infographics.include-usage.OUR", defaultMessage: "наш"})} <b className="has-text-success">{intl.formatMessage({id:"direct-translation.Київ", defaultMessage: "Київ"})}</b></span>) :
             (this.props.selectedRegion == "Україна" ? 
@@ -3363,6 +3441,12 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
     sixMonthInitializer = this.createChartInitializer(6);
     twelveMonthInitializer = this.createChartInitializer(12);
 
+    isSupplied = {
+        3: false,
+        6: false,
+        12: false
+    }
+
     barPicture = `path://M351.564,159.286c2.414,0,4.371-1.957,4.371-4.372V73.449c0-9.381-7.017-18.914-15.974-21.703L192.168,5.702 c-7.961-2.479-20.439-2.479-28.4,0L15.973,51.746C7.017,54.535,0,64.068,0,73.449v209.073c0,9.381,7.015,18.914,15.973,21.707 l147.794,46.039c3.917,1.221,8.921,1.831,13.944,1.829c5.197,0,10.413-0.651,14.458-1.947l25.771-8.271 c2.297-0.737,2.717-2.226,2.717-5.076l-0.48-89.991c-0.015-2.406-0.117-4.817-6.365-3.846l-9.724,1.347l22.873-47.526 l23.191,39.315l-8.016,1.839c0,0-3.492,0.31-3.492,4.273c0,22.125-0.182,88.497-0.182,88.497c0,4.975,3.672,4.525,5.715,4.169 l54.205-17.486c2.067-0.667,3.041-1.598,3.041-5.592l-0.416-80.349c0-5.597-2.623-6.401-5.003-6.053l-10.312,1.503l20.614-45.019 l22.351,37.303l-9.466,1.855c-2.369,0.465-3.374,1.972-3.374,5.376v81.2c0,3.443,2.161,6.103,6.238,4.096l18.381-6.859 c8.694-3.244,15.502-13.056,15.502-22.333v-81.399c0-2.415-1.957-4.372-4.372-4.372s-4.371,1.957-4.371,4.372v81.399 c0,5.583-4.587,12.192-9.814,14.144l-12.821,4.784V228.9l7.197-1.409c2.647-0.518,4.742-2.11,5.746-4.366 c1.004-2.257,0.783-4.878-0.604-7.191l-24.906-41.562c-1.508-2.515-3.812-3.873-6.312-3.737c-2.506,0.137-4.641,1.745-5.863,4.408 l-23.433,51.185c-1.208,2.642-1.04,5.305,0.464,7.311c1.261,1.682,3.232,2.591,5.532,2.591c0.438,0,0.892-0.033,1.352-0.101 l8.549-1.251l0.392,75.272l-45.454,14.666l0.163-79.01c0,0,3.679-0.653,5.592-1.281c2.608-0.857,4.782-2.303,5.784-4.631 c0.998-2.327,0.772-5.017-0.621-7.38l-25.214-42.733c-1.528-2.587-3.844-3.987-6.432-3.897c-2.56,0.108-4.773,1.722-6.076,4.427 l-25.532,53.073c-1.3,2.703-1.181,5.439,0.328,7.51c1.276,1.752,3.315,2.701,5.713,2.701c0.436,0,0.883-0.031,1.339-0.094 l9.203-1.28l0.44,82.514l-22.402,7.188c-6.264,2.007-16.854,2.053-23.132,0.1l-147.795-46.04 c-5.235-1.634-9.829-7.874-9.829-13.361V73.449c0-5.485,4.594-11.726,9.829-13.357l147.795-46.043 c6.291-1.957,16.915-1.957,23.203,0l147.797,46.043c5.234,1.631,9.828,7.872,9.828,13.357v81.466 C347.192,157.33,349.149,159.286,351.564,159.286z"></path> <path d="M317.396,85.122l-130.271,40.583c-4.88,1.518-13.437,1.518-18.314,0L38.535,85.122c-2.305-0.72-4.756,0.565-5.473,2.873 c-0.719,2.305,0.568,4.756,2.875,5.473l130.272,40.583c3.297,1.026,7.529,1.541,11.759,1.541s8.461-0.514,11.757-1.541 l130.272-40.583c2.305-0.717,3.594-3.168,2.873-5.473C322.153,85.687,319.698,84.402,317.396,85.122z`
 
     render() {
@@ -3413,6 +3497,12 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
         const data = this.props.data[this.props.selectedRegion];
         const usage = this.props.averageUsage[this.props.selectedRegion];
 
+        const phrases = {
+            3: intl.formatMessage({id:`leftovers.infographics.required-supply.three-month-supplied`, defaultMessage:"Хух, на три місяці вистачить.\nМожемо поки видихнути 🛀"}),
+            6: intl.formatMessage({id:`leftovers.infographics.required-supply.six-month-supplied`, defaultMessage:"Воу, і на півроку закупились!\nОт, що значить 'зірковий менеджент' ⚝"}),
+            12: intl.formatMessage({id:`leftovers.infographics.required-supply.year-supplied`, defaultMessage:"Ого-го. На рік вистачить!\nТепер уже повний релакс і ✈ на Мальдіви"})
+        };
+
         const coverage = data.columns.reduce((acc, item, i) => {
             // Calculate the difference in month between two dates (index dates and report date)
             let index = data.data[i].findIndex(el => el == 0);
@@ -3432,24 +3522,88 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
                 return acc;
             }, {});
 
-            this.charts[months].setOption({
-                xAxis: {
-                    data: Object.keys(requiredSupply).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
-                },
-                series: [
-                {
-                    type: 'pictorialBar',
-                    symbol: this.barPicture,
-                    symbolSize: 50,
-                    symbolRepeat: 'fixed',
-                    symbolClip: true,
-                    name: intl.formatMessage({id:`leftovers.infographics.required-supply.series-name`, defaultMessage:'Доз вакцини'}),
-                    data: Object.values(requiredSupply),
-                }]
-            });
+            if (Object.keys(requiredSupply).length !== 0) {
+                let replaceMerge = [];
+                if (this.isSupplied[months]) {
+                    replaceMerge = replaceMerge.concat(['graphic']);
+                    this.isSupplied[months] = false;
+                }
 
+                this.charts[months].setOption({
+                    xAxis: {
+                        data: Object.keys(requiredSupply).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
+                    },
+                    series: [
+                    {
+                        type: 'pictorialBar',
+                        symbol: this.barPicture,
+                        symbolSize: 50,
+                        symbolRepeat: 'fixed',
+                        symbolClip: true,
+                        name: intl.formatMessage({id:`leftovers.infographics.required-supply.series-name`, defaultMessage:'Доз вакцини'}),
+                        data: Object.values(requiredSupply),
+                    }]
+                }, {replaceMerge});
+            }
+            else {
+                let replaceMerge = [];
+                if (!this.isSupplied[months]) {
+                    replaceMerge = replaceMerge.concat(['series', 'xAxis']);
+                    this.isSupplied[months] = true;
+                }
+
+                this.charts[months].setOption({
+                    xAxis: {
+                        data: [],
+                    },
+                    graphic: {
+                        elements: [
+                        {
+                            type: 'text',
+                            left: 'center',
+                            top: 'center',
+                            style: {
+                            text: phrases[months],
+                            fontSize: 40,
+                            fontWeight: 'bold',
+                            lineDash: [0, 200],
+                            lineDashOffset: 0,
+                            fill: 'transparent',
+                            stroke: '#c8ffb2',
+                            lineWidth: 1
+                            },
+                            keyframeAnimation: {
+                            duration: 5000,
+                            loop: true,
+                            keyframes: [
+                                {
+                                percent: 0.3,
+                                style: {
+                                    fill: 'transparent',
+                                    lineDashOffset: 200,
+                                    lineDash: [200, 0]
+                                }
+                                },
+                                {
+                                // Stop for a while.
+                                percent: 0.35,
+                                style: {
+                                    fill: 'transparent'
+                                }
+                                },
+                                {
+                                percent: 0.85,
+                                style: {
+                                    fill: '#c8ffb2'
+                                }
+                                }
+                            ]
+                            }
+                        }]
+                    }
+                }, {replaceMerge});
+            }
         });
-        
     }
 }
 
@@ -3484,6 +3638,8 @@ class App extends React.Component {
             case 'en':
                 return enMessages;
             case 'uk':
+                return ukMessages;
+            case 'ru':
                 return ukMessages;
             default:
                 return enMessages; // Fallback to English

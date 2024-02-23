@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #15171E;
+            color: #d0d1d2;
+          }
+          
+          .checkbox {
+            margin: 15px;
+          }
+          
+          ul {
+            list-style-type: none;
+          }
+          
+          label {
+            font-family: Helvetica;
+            letter-spacing: 1px;
+          }
+          
+          @keyframes pull {
+            0% {
+              height: 0;
+            }
+            100% {
+              height: 1.2rem;
+            }
+          }
+          @keyframes pop {
+            0% {
+              opacity: 0;
+            }
+            75% {
+              opacity: 1;
+            }
+            100% {
+              transform: scale(1.2);
+            }
+          }
+          .checkbox-flip, .checkbox-pop, .checkbox-pull, .checkbox-spin {
+            display: none;
+          }
+          
+          .checkbox-flip + label span,
+          .checkbox-pop + label span,
+          .checkbox-pull + label span,
+          .checkbox-spin + label span {
+            display: inline-block;
+            width: 25px;
+            height: 19px;
+            margin: 0 5px -4px 0; /*layout relationship between check and label*/
+          }
+          .checkbox-flip + label span:before, .checkbox-flip + label span:after,
+          .checkbox-pop + label span:before,
+          .checkbox-pop + label span:after,
+          .checkbox-pull + label span:before,
+          .checkbox-pull + label span:after,
+          .checkbox-spin + label span:before,
+          .checkbox-spin + label span:after {
+            transition: all 0.3s ease-in-out;
+            content: "";
+            position: absolute;
+            z-index: 1;
+            width: 1rem;
+            height: 1rem;
+            background: transparent;
+            border: 2px solid #FF4040;
+          }
+          .checkbox-flip + label span:after,
+          .checkbox-pop + label span:after,
+          .checkbox-pull + label span:after,
+          .checkbox-spin + label span:after {
+            z-index: 0;
+            border: none;
+          }
+          
+          .checkbox-flip:checked + label span:before {
+            transform: rotateY(180deg);
+            background: #FF4040;
+          }
+          
+          .checkbox-pop:checked + label span:before {
+            animation: pop 0.3s ease;
+            z-index: 100;
+            background: #FF4040;
+          }
+          
+          .checkbox-pull:checked + label span:after {
+            width: 1.2rem;
+            height: 1.2rem;
+            background: #FF4040;
+            animation: pull 0.4s linear;
+          }
+          
+          .checkbox-spin:checked + label span:before {
+            transform: rotateZ(180deg);
+            background: #FF4040;
+          }
+    </style>
+</head>
+<body>
+    <ul>
+        <li class="checkbox">
+          <input class="checkbox-flip" type="checkbox" id="check1"/>
+          <label for="check1"><span></span>Flip Me</label>
+        </li>
+        <li class="checkbox">
+          <input class="checkbox-pop" type="checkbox" id="check2"/>
+          <label for="check2"><span></span>Pop Me</label>
+        </li>
+        <li class="checkbox">
+          <input class="checkbox-pull" type="checkbox" id="check3"/>
+          <label for="check3"><span></span>Pull Me</label>
+        </li>
+        <li class="checkbox">
+          <input class="checkbox-spin" type="checkbox" id="check4"/>
+          <label for="check4"><span></span>Spin Me</label>
+        </li>
+      </ul>
+</body>
+</html>

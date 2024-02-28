@@ -253,13 +253,13 @@ class RegionalChartSectionComponent extends React.Component {
         const intl = this.context;
         const nationalStock = intl.formatMessage({id:"direct-translation.НацСклади", defaultMessage:"НацСклади"});
         
-        let selectedFoundSources = this.state.selectedFilters['Джерело фінансування'];
-        selectedFoundSources = Object.keys(selectedFoundSources).filter(el => selectedFoundSources[el]);
+        let selectedFundSources = this.state.selectedFilters['Джерело фінансування'];
+        selectedFundSources = Object.keys(selectedFundSources).filter(el => selectedFundSources[el]);
         
         // data is a dictionary of the form { 'Регіон': .., 'Джерело фінансування': .., 'Міжнародна непатентована назва': .. , 'Кількість': .. }
         let data = this.state.data['Регіон'].reduce((acc, item, i) => {
             // Filter out all the data that does not correspond to the selected found sources 
-            if (selectedFoundSources.includes(this.state.data['Джерело фінансування'][i])) {
+            if (selectedFundSources.includes(this.state.data['Джерело фінансування'][i])) {
                 let vaccine = this.state.data['Міжнародна непатентована назва'][i];
                 vaccine = intl.formatMessage({id:`direct-translation.${vaccine}`, defaultMessage:vaccine});
                 if (!acc[item]) {
@@ -390,10 +390,13 @@ class RegionalChartSectionComponent extends React.Component {
                         title: intl.formatMessage({id:'direct-translation.EXPORT-TO-EXCEL', defaultMessage:'Експортувати в Excel'}),
                         icon: 'path://M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM11 12C10.4477 12 10 12.4477 10 13V17V21C10 21.5523 10.4477 22 11 22H15H21C21.5523 22 22 21.5523 22 21V17V13C22 12.4477 21.5523 12 21 12H15H11ZM12 16V14H14V16H12ZM16 16V14H20V16H16ZM16 20V18H20V20H16ZM14 18V20H12V18H14Z',
                         onclick: function () {
-                            console.log("Data: ", data);
-                            console.log("Vaccines: ", vaccines_raw);
-                            console.log("Regions: ", regions_raw);
-                            const aoa = [[''].concat(regions)];
+                            console.log(selectedFundSources);
+                            let fundSources = selectedFundSources.map(value => value.replaceAll(/[\u0400-\u04FF]+/gi, word => intl.formatMessage({id: `foundsource.${word.toLowerCase()}`, defaultMessage: word})));
+                            console.log(fundSources);
+                            fundSources = fundSources.join(', ');
+
+                            const aoa = [[intl.formatMessage({id:'regional.toolbox.data-save.selected-fundsources', defaultMessage:'Обрані джерела фінансування'})+':', fundSources],[]];
+                            aoa.push([''].concat(regions));
                             for (let vacName of vaccines_raw) {
                                 aoa.push(
                                     [vacName].concat( regions_raw.map(reg => data[reg][vacName] || 0) ) 
@@ -547,7 +550,7 @@ class RegionalTextSectionComponent extends React.Component {
                     <div className="level-item has-text-centered">
                         <div>
                             <p className="title is-4 has-text-light">
-                                <FormattedMessage id="regional.text.antitop" defaultMessage="Анти-Топ"/>
+                                <FormattedMessage id="regional.text.top" defaultMessage="Топ"/>
                                 <br/>
                                 <FormattedMessage id="regional.text.of-absent-vaccines" defaultMessage="Відсутніх Вакцин"/>
                             </p>
@@ -1921,97 +1924,93 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
         let intl = this.context;
 
         const PHRASES = [
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-1-1" defaultMessage="А хто це в нас такий молодець, у якого нічого не псується?" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-1-2" defaultMessage="Так це ж {region}!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-1" defaultMessage="А ну гляньте, хто це тут без проблем?" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-2" defaultMessage="Здається, це {region}!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-1" defaultMessage="О, які ми молодці!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-2" defaultMessage="А хто точно молодець? А {region} молодець!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-1" defaultMessage="А ось і наша молодчинка!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-2" defaultMessage="Ей, {region}, йди шепну на вушко: ти просто зірка!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-1" defaultMessage="Хто тут без проблем?" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-2" defaultMessage="Очевидно! Це ж {region}!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-1" defaultMessage="Ура!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-2" defaultMessage="А {region} таки вміє показати як вживати вакцину!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-1" defaultMessage="Ого, ну і дає {region}!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-2" defaultMessage="Ну у вас же все просто бімба!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-1" defaultMessage="Вітаємо, {region}!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-2" defaultMessage="Знаєте, чому ми усміхаємось? Бо вакцина у вас не псується!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-1" defaultMessage="Так тримати, {region}!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-2" defaultMessage="Не знаю, як у інших, а у вас усе супер!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-1" defaultMessage="Хто тут найкращий?" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-2" defaultMessage="Безумовно, {region}!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-11-1" defaultMessage="Усім би бути як {region}!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-11-2" defaultMessage="Чому? Бо у вас усе бомбезно!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-1" defaultMessage="Ось хто точно знає, як треба працювати!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-2" defaultMessage='В сенсі "хто?"? Звичайно, {region}!' values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-1" defaultMessage="А ось і наш чемпіон!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-2" defaultMessage="Так-так, {region}, ви просто супер!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-1" defaultMessage="Чому це тут не відображаються проблеми?" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-2" defaultMessage="Елементарно, Ватсон! Бо це ж {region}, тут їх нема!" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-15-1" defaultMessage="Ура, {region}!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-15-2" defaultMessage="У вас усе просто космос!" values={{region}}/></React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-16-1" defaultMessage="Привітик, {region}!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-16-2" defaultMessage="Ви знали, що у вас без проблем? (і у нас, разом з вами)" values={{region}}/>
-            </React.Fragment>,
-            (region) => <React.Fragment>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-1" defaultMessage="Уау, {region}!" values={{region}}/>
-                <br/>
-                <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-2" defaultMessage="Вакцина не псується – то й ЦГЗ сміється!" values={{region}}/>
-            </React.Fragment>,
+            (region) => <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-1-1" defaultMessage="Ризики утилізації вакцини відсутні для {region}" values={{region}}/>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-1" defaultMessage="А ну гляньте, хто це тут без проблем?" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-2-2" defaultMessage="Здається, це {region}!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-1" defaultMessage="О, які ми молодці!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-3-2" defaultMessage="А хто точно молодець? А {region} молодець!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-1" defaultMessage="А ось і наша молодчинка!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-4-2" defaultMessage="Ей, {region}, йди шепну на вушко: ти просто зірка!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-1" defaultMessage="Хто тут без проблем?" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-5-2" defaultMessage="Очевидно! Це ж {region}!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-1" defaultMessage="Ура!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-6-2" defaultMessage="А {region} таки вміє показати як вживати вакцину!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-1" defaultMessage="Ого, ну і дає {region}!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-7-2" defaultMessage="Ну у вас же все просто бімба!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-1" defaultMessage="Вітаємо, {region}!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-8-2" defaultMessage="Знаєте, чому ми усміхаємось? Бо вакцина у вас не псується!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-1" defaultMessage="Так тримати, {region}!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-9-2" defaultMessage="Не знаю, як у інших, а у вас усе супер!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-1" defaultMessage="Хто тут найкращий?" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-10-2" defaultMessage="Безумовно, {region}!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-11-1" defaultMessage="Усім би бути як {region}!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-11-2" defaultMessage="Чому? Бо у вас усе бомбезно!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-1" defaultMessage="Ось хто точно знає, як треба працювати!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-12-2" defaultMessage='В сенсі "хто?"? Звичайно, {region}!' values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-1" defaultMessage="А ось і наш чемпіон!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-13-2" defaultMessage="Так-так, {region}, ви просто супер!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-1" defaultMessage="Чому це тут не відображаються проблеми?" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-14-2" defaultMessage="Елементарно, Ватсон! Бо це ж {region}, тут їх нема!" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-15-1" defaultMessage="Ура, {region}!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-15-2" defaultMessage="У вас усе просто космос!" values={{region}}/></React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-16-1" defaultMessage="Привітик, {region}!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-16-2" defaultMessage="Ви знали, що у вас без проблем? (і у нас, разом з вами)" values={{region}}/>
+            // </React.Fragment>,
+            // (region) => <React.Fragment>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-1" defaultMessage="Уау, {region}!" values={{region}}/>
+            //     <br/>
+            //     <FormattedMessage id="leftovers.infographics.include-usage.funny-phrases-17-2" defaultMessage="Вакцина не псується – то й ЦГЗ сміється!" values={{region}}/>
+            // </React.Fragment>,
         ];
 
         const replacement = this.props.selectedRegion == "м. Київ" ? 
-            (<span>{intl.formatMessage({id:"leftovers.infographics.include-usage.OUR", defaultMessage: "наш"})} <b className="has-text-success">{intl.formatMessage({id:"direct-translation.Київ", defaultMessage: "Київ"})}</b></span>) :
+            (<span><b className="has-text-success">{intl.formatMessage({id:"direct-translation.Київ", defaultMessage: "Києва"})}</b></span>) :
             (this.props.selectedRegion == "Україна" ? 
-                (<b className="has-text-success">{intl.formatMessage({id:"leftovers.infographics.include-usage.whole-Ukraine", defaultMessage: "вся Українонька"})}</b>) :
-                (<span>{intl.formatMessage({id:"leftovers.infographics.include-usage.OUR", defaultMessage: "наша"})} <b className="has-text-success">{intl.formatMessage({id:`direct-translation.${this.props.selectedRegion}`, defaultMessage: this.props.selectedRegion})} {intl.formatMessage({id: "direct-translation.REGION", defaultMessage:"область"})}</b></span>)
+                (<b className="has-text-success">{intl.formatMessage({id:"leftovers.infographics.include-usage.whole-Ukraine", defaultMessage: "України"})}</b>) :
+                (<span><b className="has-text-success">{intl.formatMessage({id:`direct-translation.${this.props.selectedRegion}`, defaultMessage: this.props.selectedRegion.replace("ська", "ської").replace("цька", "цької")})} {intl.formatMessage({id: "direct-translation.REGION", defaultMessage:"області"})}</b></span>)
             )
         let phrase = PHRASES[Math.floor(Math.random() * PHRASES.length)](replacement);
 
@@ -2151,9 +2150,9 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                                                         phrase
                                                     }
                                                 </p>
-                                                <p className="huge-font has-text-centered">
+                                                {/* <p className="huge-font has-text-centered">
                                                     ❣️
-                                                </p>
+                                                </p> */}
                                             </div>
                                         </div>
                                     </div>
@@ -2687,7 +2686,7 @@ class VaccinesExpectedToExpireChartComponent extends React.Component {
                 type: 'category',
                 // Rotate the labels so that they don't overlap
                 axisLabel: {
-                    rotate: 0,
+                    rotate: 30,
                 }
             },
             tooltip: {
@@ -3498,9 +3497,9 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
         const usage = this.props.averageUsage[this.props.selectedRegion];
 
         const phrases = {
-            3: intl.formatMessage({id:`leftovers.infographics.required-supply.three-month-supplied`, defaultMessage:"Хух, на три місяці вистачить.\nМожемо поки видихнути 🛀"}),
-            6: intl.formatMessage({id:`leftovers.infographics.required-supply.six-month-supplied`, defaultMessage:"Воу, і на півроку закупились!\nОт, що значить 'зірковий менеджент' ⚝"}),
-            12: intl.formatMessage({id:`leftovers.infographics.required-supply.year-supplied`, defaultMessage:"Ого-го. На рік вистачить!\nТепер уже повний релакс і ✈ на Мальдіви"})
+            3: intl.formatMessage({id:`leftovers.infographics.required-supply.three-month-supplied`, defaultMessage:"Достатня забезпеченість\nдля покриття потреби\nна найближчі 3 місяці"}),
+            6: intl.formatMessage({id:`leftovers.infographics.required-supply.six-month-supplied`, defaultMessage:"Забезпеченість достатня і для\nпокриття потреби на 6 місяців"}),
+            12: intl.formatMessage({id:`leftovers.infographics.required-supply.year-supplied`, defaultMessage:"Проведений аналіз показує,\nщо потреба регіону покрита на рік"})
         };
 
         const coverage = data.columns.reduce((acc, item, i) => {
@@ -3573,11 +3572,11 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
                             lineWidth: 1
                             },
                             keyframeAnimation: {
-                            duration: 5000,
+                            duration: 8000,
                             loop: true,
                             keyframes: [
                                 {
-                                percent: 0.3,
+                                percent: 0.2,
                                 style: {
                                     fill: 'transparent',
                                     lineDashOffset: 200,
@@ -3586,17 +3585,45 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
                                 },
                                 {
                                 // Stop for a while.
-                                percent: 0.35,
+                                percent: 0.23,
                                 style: {
                                     fill: 'transparent'
                                 }
                                 },
                                 {
-                                percent: 0.85,
+                                percent: 0.475,
                                 style: {
                                     fill: '#c8ffb2'
                                 }
+                                },
+                                {
+                                percent: 0.525,
+                                style: {
+                                    fill: '#c8ffb2'
                                 }
+                                },
+                                {
+                                percent: 0.77,
+                                style: {
+                                    fill: 'transparent'
+                                }
+                                },
+                                {
+                                percent: 0.8,
+                                style: {
+                                    fill: 'transparent',
+                                    lineDashOffset: 200,
+                                    lineDash: [200, 0]
+                                }
+                                },
+                                {
+                                percent: 1,
+                                style: {
+                                    fill: 'transparent',
+                                    lineDash: [0, 200],
+                                    lineDashOffset: 0,
+                                }
+                                },
                             ]
                             }
                         }]

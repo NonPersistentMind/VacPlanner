@@ -1,6 +1,6 @@
 import React, {Component, createContext, useContext} from 'react';
 import ReactDOM from 'react-dom';
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga4';
 import { IntlProvider, FormattedMessage, IntlContext } from 'react-intl';
 import { saveAs } from 'file-saver';
 
@@ -3699,7 +3699,7 @@ class App extends React.Component {
 
     componentDidMount() {
         ReactGA.initialize('G-TVYW5B1W6C');
-        ReactGA.pageview(window.location.pathname + window.location.search);
+        ReactGA.send("pageview");
         window.onresize = () => this.state.charts.forEach(el => el.resize());
     }
 }

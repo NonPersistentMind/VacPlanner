@@ -10,6 +10,12 @@ module.exports = {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'docs'), // Output directory
   },
+  // Other configurations for resolving modules
+  resolve: {
+    alias: {
+      '@js-root': path.resolve(__dirname, 'src/js'),
+    }
+  },
   // Loaders for handling different file types
   module: {
     rules: [

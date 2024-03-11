@@ -116,11 +116,12 @@ section {
 }
 
 #section-1 .regional-foundsource-filter {
+    --right: 30px;
     position: absolute;
     top: 60px;
-    right: 1.9vmax;
+    right: var(--right);
 
-    width: 20vw;
+    width: calc(25vw - var(--right));
     z-index: 1;
 }
 

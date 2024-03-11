@@ -1,10 +1,9 @@
 from pathlib import Path
 from scipy.spatial import ConvexHull
 import json
+from config import SOURCE_FOLDER
 
-RESULTS_FOLDER = Path('./Results/')
-DATA_FOLDER = Path('./Data/')
-SOURCE_FOLDER = Path('./SourceFiles/')
+ALL_SLICE = slice(None)
 
 vaccineColors = [
             '#FF0000',

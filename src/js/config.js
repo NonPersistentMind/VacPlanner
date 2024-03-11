@@ -18,6 +18,24 @@ export const vaccineColors = [
     '#89d4fe',
 ];
 
+export let namedVaccineColors = [
+    'ІПВ',
+    'АДП',
+    'АДП-М',
+    'АКДП',
+    'БЦЖ',
+    'ГепВ',
+    'КПК',
+    'ОПВ',
+    'Пента',
+    'Сказ',
+    'ХІБ'
+];
+namedVaccineColors = namedVaccineColors.reduce((acc, name, index) => {
+    acc[name] = vaccineColors[index];
+    return acc;
+}, {});
+
 export const monthMapping = {
     1: 'Січень', 
     2: 'Лютий', 

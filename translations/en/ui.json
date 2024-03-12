@@ -133,6 +133,8 @@
     "leftovers.chart.title-no-usage": "Stock Forecast (Expiration Dates Only)",
     "leftovers.chart.usage-switch.overall-stats":"Show Overall Stats",
     "leftovers.chart.usage-switch.usage-included-stats":"Show Consumption-Based Stats",
+    "leftovers.chart.future-supplies.doses of":"doses of",
+    "leftovers.chart.future-supplies.will be delivered on":"will be delivered on",
 
 
     "leftovers.infographics.no-usage.vaccines-expiration-by-dates.expiring": "",

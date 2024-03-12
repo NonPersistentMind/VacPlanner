@@ -20,6 +20,7 @@ import {
 } from './js/misc.js';
 import {
     vaccineColors, 
+    namedVaccineColors,
     monthMapping, 
     globalOption,
 } from './js/config.js';
@@ -697,7 +698,7 @@ class InstitutionalComponent extends React.Component {
         const tree = data.reduce((acc, item) => {
             let vaccine = acc.find(el => el.name === item.Name);
             if (!vaccine) {
-                vaccine = { name: item.Name, id: item.Name, children: [] };
+                vaccine = { name: item.Name, id: item.Name, children: []};
                 acc.push(vaccine);
             }
             let region = vaccine.children.find(el => el.name === item.Rgn);
@@ -706,6 +707,7 @@ class InstitutionalComponent extends React.Component {
                 vaccine.children.push(region);
             }
             region.hidden_children.push({ name: item.Fclt, id: item.Fclt, value: item.Amnt });
+
             return acc;
         }, []);
 
@@ -724,14 +726,30 @@ class InstitutionalComponent extends React.Component {
                 {/*<img src="https://i.ibb.co/7z2FPgV/112768-red-and-black-blurred-background-vector-2.jpg" alt=""/>*/}
                 <div className="gradient-background"></div>
 
-                <InstitutionalChartSectionComponent data={this.state.data} language={this.props.language} addNewChart={this.props.addNewChart} createTreeFromData={this.createTreeFromData}/>
+                <InstitutionalChartSectionComponent 
+                    data={this.state.data} 
+                    language={this.props.language} 
+                    addNewChart={this.props.addNewChart} 
+                    createTreeFromData={this.createTreeFromData}
+                    colorOrder={this.colorOrderArray}
+                />
                 
-                <InstitutionalTextSectionComponent data={this.state.data} language={this.props.language} createTreeFromData={this.createTreeFromData}/>
+                <InstitutionalTextSectionComponent 
+                    data={this.state.data} 
+                    language={this.props.language} 
+                    createTreeFromData={this.createTreeFromData}
+                />
             </div>
         ) : null;
     }
 
     componentDidMount() {
+        this.colorOrderArray = this.state.defaultData.reduce((acc, item) => {
+            (!acc[item.Name]) && (acc[item.Name] = 0);
+            acc[item.Name] += item.Amnt;
+            return acc;
+        }, {});
+        this.colorOrderArray = Object.entries(this.colorOrderArray).sort((a, b) => b[1] - a[1]).map(el => el[0]);
         this.setState({
             data: this.translateData(this.state.defaultData),
         });
@@ -856,27 +874,14 @@ class InstitutionalChartSectionComponent extends React.Component {
     componentDidMount() {
         const intl = this.context;
         const tree = this.props.createTreeFromData(this.props.data);
+        const vaccineOrder = tree.map(el => {el.name, el._val}).sort((a,b) => b._val - a._val);   
         const instChartHolder = document.getElementById('section-3-chart');
         const chart = echarts.init(instChartHolder, 'roma');
         this.chart = chart;
 
-        const c = new echarts.graphic.LinearGradient(0, 0, 1, 1, [
-        {
-            offset: 0,
-            color: '#313c45'
-        },
-        {
-            offset: 0.55,
-            color: '#495c69'
-        },
-        {
-            offset: 1,
-            color: '#566c7a'
-        }], false);
-
         let option = Object.assign({}, globalOption);
         option = {
-            color: ['#ffffff'].concat(vaccineColors).map(el => new echarts.graphic.LinearGradient(0, 0, 1, 1, [
+            color: ['#ffffff'].concat(this.props.colorOrder.map(el => namedVaccineColors[el])).map(el => new echarts.graphic.LinearGradient(0, 0, 1, 1, [
                 {
                     offset: 0,
                     color: '#313c45'
@@ -1509,6 +1514,8 @@ class LeftoversUsageExpirationComponent extends React.Component {
         let averageUsage = /*{}*/;
         let detailedUsage = /*{}*/;
         let usageTrends = /*{}*/;
+        let futureSupplies = /*{}*/;
+        clg(futureSupplies);
 
         prepareJSONedDataFrame(dataWithExpirations);
 
@@ -1526,6 +1533,7 @@ class LeftoversUsageExpirationComponent extends React.Component {
             usageTrends,
             vaccinesExpectedToExpire,
             expirationTimelines,
+            futureSupplies,
             selectedRegion: 'Україна',
             includeUsage: true,
         }
@@ -1550,6 +1558,7 @@ class LeftoversUsageExpirationComponent extends React.Component {
             <div id="leftovers-section">
                 <LeftoversUsageExpirationChartSectionComponent
                     data={this.state.includeUsage ? this.state.dataWithUsage : this.state.dataWithExpirations} 
+                    futureSupplies={this.state.futureSupplies}
                     selectedRegion={this.state.selectedRegion} 
                     allRegions={this.allRegions} 
                     onRegionSelect={this.selectRegionHandler}
@@ -1699,6 +1708,7 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
             },
             yAxis: {
                 type: 'value',
+                boundaryGap: ['0%', '10%'],
                 splitLine: {
                     show: true,
                     lineStyle:{
@@ -1799,6 +1809,7 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
 
         let data = this.props.data[this.props.selectedRegion];
         this.reference.data = data;
+        const multipleSuppliesController = {};
 
         this.chart.setOption({
             title:{
@@ -1876,6 +1887,42 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                     data: el.map((el, i) => {
                         return [new Date(data.index[i]), el];
                     }),
+                    markPoint: {
+                        data: (!this.props.futureSupplies[data.columns[index]] || this.props.selectedRegion!='Україна') ? [] : Object.entries(this.props.futureSupplies[data.columns[index]]).map((dateAmountPair,i) => {
+                                const correction = 1;
+                                !multipleSuppliesController[dateAmountPair[0]] && (multipleSuppliesController[dateAmountPair[0]] = 0);
+                                const supplyDate = new Date(dateAmountPair[0]);
+                                let supplyDateWithCorrection = new Date(dateAmountPair[0]);
+                                supplyDateWithCorrection.setDate(supplyDate.getDate() + (multipleSuppliesController[dateAmountPair[0]]));
+
+                                const result =  { 
+                                    // symbol: "path://M276.783,119.911c1.685-1.725,2.427-4.017,2.246-6.245h0.09C270.389,49.563,215.295,0,148.834,0 C82.575,0,27.615,49.26,18.629,113.079c-0.014,0.099-0.032,0.197-0.042,0.296c-0.013,0.098-0.027,0.194-0.04,0.291h0.023 c-0.141,2.188,0.606,4.423,2.26,6.112l90.027,91.888H90.333c-13.808,0-25.333,11.193-25.333,25v36c0,13.807,11.525,25,25.333,25 h116c13.808,0,24.667-11.193,24.667-25v-36c0-13.807-10.859-25-24.667-25h-19.258L276.783,119.911z M165.945,210.39l31.14-104.235 c6.882-9.863,18.306-16.321,31.245-16.321c15.137,0,28.207,8.829,34.349,21.616L165.945,210.39z M116.982,107.045 c6.806-10.363,18.525-17.212,31.852-17.212c13.073,0,24.605,6.59,31.462,16.626l-31.384,105.052L116.982,107.045z M34.576,110.945 c6.241-12.513,19.158-21.112,34.094-21.112c13.01,0,24.49,6.527,31.359,16.481l31.734,103.827L34.576,110.945z M173,246.666v16h-17 v17h-16v-17h-17v-16h17v-17h16v17H173z", 
+                                    symbol: "path://M297 202.349h-9v-39c0-12.683-9.984-23-22.667-23h-8.872l-10.127-40H192v-9c0-18.196-14.471-33-32.667-33h-126C15.137 58.349 0 73.152 0 91.349v94c0 18.196 15.137 33 33.333 33h4.555c-.004-.221-.017-.438-.017-.66 0-5.471 1.204-10.664 3.347-15.34h-7.885c-9.374 0-17.333-7.626-17.333-17v-94c0-9.374 7.959-17 17.333-17h126c9.374 0 16.667 7.626 16.667 17v94c0 9.374-7.293 17-16.667 17h-50.885c2.143 4.676 3.347 9.869 3.347 15.34 0 .222-.013.439-.017.66h47.555c1.355 0 2.667-.092 3.667-.251v.251h21.888c-.004-.221-.017-.438-.017-.66 0-20.382 16.581-36.963 36.961-36.963 20.382 0 36.963 16.581 36.963 36.963 0 .222-.013.439-.017.66H297V202.349zM242.795 217.688c0-11.559-9.404-20.963-20.963-20.963-11.558 0-20.961 9.404-20.961 20.963 0 11.559 9.403 20.963 20.961 20.963C233.391 238.651 242.795 229.247 242.795 217.688zM221.832 224.269c-3.633 0-6.578-2.945-6.578-6.58 0-3.635 2.945-6.58 6.578-6.58 3.635 0 6.58 2.945 6.58 6.58C228.412 221.323 225.467 224.269 221.832 224.269zM95.795 217.688c0-11.559-9.404-20.963-20.963-20.963-11.558 0-20.961 9.404-20.961 20.963 0 11.559 9.403 20.963 20.961 20.963C86.391 238.651 95.795 229.247 95.795 217.688zM74.832 224.269c-3.633 0-6.578-2.945-6.578-6.58 0-3.635 2.945-6.58 6.578-6.58 3.635 0 6.58 2.945 6.58 6.58C81.412 221.323 78.467 224.269 74.832 224.269zM88 146.349 88 168.349 104 168.349 104 146.349 126 146.349 126 130.349 104 130.349 104 108.349 88 108.349 88 130.349 66 130.349 66 146.349zM132 254 132 331c-10 5-23 5-33 0C123 344 135 359 146 377 156 359 170 344 193 331 183 336 170 336 160 331L160 254Z", 
+                                    symbolKeepAspect: true,
+                                    symbolSize: 45,
+                                    xAxis: supplyDateWithCorrection,
+                                    y: 125,
+                                    emphasis: {
+                                        label: {
+                                            show: true,
+                                            position: 'top',
+                                            fontSize: 12,
+                                            color: (params) => {
+                                                return "white";
+                                            },
+                                            fontWeight: 'bold',
+                                            formatter: () => `${dateAmountPair[1]} ${intl.formatMessage({id:"leftovers.chart.future-supplies.doses of", defaultMessage: "доз"})} ${intl.formatMessage({id:"direct-translation."+data.columns[index], defaultMessage:data.columns[index]})}\n${intl.formatMessage({id:"leftovers.chart.future-supplies.will be delivered on", defaultMessage: "будуть доставлені"})} ${supplyDate.toLocaleDateString("uk-UA")}`,
+                                        }
+                                    }
+                                };
+
+                                multipleSuppliesController[dateAmountPair[0]] = (multipleSuppliesController[dateAmountPair[0]] <= 0) ? (correction - multipleSuppliesController[dateAmountPair[0]]) : -multipleSuppliesController[dateAmountPair[0]];
+                                return result;
+
+
+                            })
+
+                    },
                 }
             }),
 

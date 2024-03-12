@@ -7,7 +7,7 @@ DATA_FOLDER = Path('./Data/')
 SOURCE_FOLDER = Path('./SourceFiles/')
 
 TESTING = True
-SKIP_FUTURE_SUPPLIES = True
+SKIP_FUTURE_SUPPLIES = False
 checkup_required = False
 
 DEFAULT_SHELF_LIFE = dt.timedelta(days=365 * 2)

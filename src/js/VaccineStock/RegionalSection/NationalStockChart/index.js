@@ -211,7 +211,7 @@ export default function NationalStockChartComponent({nationalStock, selectedFilt
                     return `<div class="is-flex is-justify-content-space-between my-1">
                     <span class="mr-3">
                         <svg height="10" width="10">
-                            <circle cx="5" cy="5" r="5" fill="${params.color}"/>
+                            <circle cx="5" cy="5" r="5" fill="${params.color.colorStops[1].color}"/>
                         </svg>
                         ${name}
                     </span> 
@@ -226,7 +226,23 @@ export default function NationalStockChartComponent({nationalStock, selectedFilt
                     data: vaccines_raw.map((el) => data['Україна'][el]),
                     itemStyle: {
                         color: (params) => {
-                            return namedVaccineColors[params.name];
+                            return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                {
+                                    offset: 0,
+                                    color: namedVaccineColors[params.name] + 'bb'
+                                }, 
+                                {
+                                    offset: 0.42,
+                                    color: namedVaccineColors[params.name] 
+                                }, 
+                                {
+                                    offset: 0.57,
+                                    color: namedVaccineColors[params.name] 
+                                }, 
+                                {
+                                    offset: 1,
+                                    color: namedVaccineColors[params.name] + 'bb'
+                                }]);
                         },
                         borderRadius: 6,
                     }

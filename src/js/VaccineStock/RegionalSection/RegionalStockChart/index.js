@@ -22,6 +22,8 @@ export default function RegionalStockChartComponent({regionalStock, selectedFilt
     const chartCompontent = React.useRef(null);
     const chartInstance = React.useRef(null);
 
+    const allVaccines = React.useRef(Array.from(new Set(regionalStock['Міжнародна непатентована назва'])).sort());
+
     // Initial setup
     React.useEffect(() => {
         if (!chartCompontent.current) return;
@@ -203,31 +205,22 @@ export default function RegionalStockChartComponent({regionalStock, selectedFilt
         selectedFundSources = Object.keys(selectedFundSources).filter(el => selectedFundSources[el]);
         
         // regionalStock is a dictionary of the form { 'Регіон': .., 'Джерело фінансування': .., 'Міжнародна непатентована назва': .. , 'Кількість': .. }
-        let vaccines_raw = new Set();
         let data = regionalStock['Регіон'].reduce((acc, region, i) => {
             // Filter out all the data that does not correspond to the selected found sources 
             if (selectedFundSources.includes(regionalStock['Джерело фінансування'][i])) {
                 let vaccine = regionalStock['Міжнародна непатентована назва'][i];
-                vaccines_raw.add(vaccine);
                 vaccine = intl.formatMessage({id:`direct-translation.${vaccine}`, defaultMessage:vaccine});
                 if (!acc[region]) {
-                    acc[region] = {
-                        [vaccine]: regionalStock['Кількість доз'][i]
-                    };
+                    acc[region] = {};
+                    allVaccines.current.forEach(vac => acc[region][intl.formatMessage({id:`direct-translation.${vac}`, defaultMessage:vac})] = 0 );
                 }
-                else {
-                    if (acc[region][vaccine]) {
-                        acc[region][vaccine] += regionalStock['Кількість доз'][i];
-                    }
-                    else {
-                        acc[region][vaccine] = regionalStock['Кількість доз'][i];
-                    }
-                }
+
+                acc[region][vaccine] += regionalStock['Кількість доз'][i];
             }
             return acc;
         }, {});
-
-        vaccines_raw = Array.from(vaccines_raw);
+        
+        let vaccines_raw = Array.from(allVaccines.current);
         let vaccines = vaccines_raw.map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
 
         let regions_raw = Object.keys(data).sort((a, b) => regionPositions[a] - regionPositions[b]);
@@ -365,7 +358,7 @@ export default function RegionalStockChartComponent({regionalStock, selectedFilt
                     }
                 }
             }
-        }, {replaceMerge: ['series', 'toolbox']});
+        });
 
     }, [regionalStock, selectedFilters]);
 

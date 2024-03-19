@@ -2088,7 +2088,7 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
             (<span><b className="has-text-success">{intl.formatMessage({id:"direct-translation.Київ", defaultMessage: "Києва"})}</b></span>) :
             (this.props.selectedRegion == "Україна" ? 
                 (<b className="has-text-success">{intl.formatMessage({id:"leftovers.infographics.include-usage.whole-Ukraine", defaultMessage: "України"})}</b>) :
-                (<span><b className="has-text-success">{intl.formatMessage({id:`direct-translation.${this.props.selectedRegion}`, defaultMessage: this.props.selectedRegion.replace("ська", "ської").replace("цька", "цької")})} {intl.formatMessage({id: "direct-translation.REGION", defaultMessage:"області"})}</b></span>)
+                (<span><b className="has-text-success">{intl.formatMessage({id:`direct-translation.${this.props.selectedRegion.replace("ська", "ської").replace("цька", "цької")})}`, defaultMessage: this.props.selectedRegion.replace("ська", "ської").replace("цька", "цької")})} {intl.formatMessage({id: "direct-translation.REGION", defaultMessage:"області"})}</b></span>)
             )
         let phrase = PHRASES[Math.floor(Math.random() * PHRASES.length)](replacement);
 

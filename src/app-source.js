@@ -1515,15 +1515,16 @@ class LeftoversUsageExpirationComponent extends React.Component {
         let detailedUsage = /*{}*/;
         let usageTrends = /*{}*/;
         let futureSupplies = /*{}*/;
-        clg(futureSupplies);
+        let noFutureSuppliesForecast = /*{}*/;
+
 
         prepareJSONedDataFrame(dataWithExpirations);
-
 
         prepareJSONedDataFrame(vaccinesExpectedToExpire, false);
 
         prepareJSONedDataFrame(expirationTimelines, false);
-
+        
+        prepareJSONedDataFrame(noFutureSuppliesForecast, false);
 
         this.state = {
             dataWithExpirations,
@@ -1536,6 +1537,7 @@ class LeftoversUsageExpirationComponent extends React.Component {
             futureSupplies,
             selectedRegion: 'Україна',
             includeUsage: true,
+            noFutureSuppliesForecast,
         }
 
         this.allRegions = Object.keys(this.state.dataWithExpirations).sort((a,b) => {
@@ -1576,6 +1578,7 @@ class LeftoversUsageExpirationComponent extends React.Component {
                     averageUsage={this.state.averageUsage}
                     detailedUsage={this.state.detailedUsage}
                     usageTrends={this.state.usageTrends}
+                    noFutureSuppliesForecast={this.state.noFutureSuppliesForecast}
 
                     addNewChart={this.props.addNewChart}
                 />
@@ -1889,6 +1892,7 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                     }),
                     markPoint: {
                         data: (!this.props.futureSupplies[data.columns[index]] || this.props.selectedRegion!='Україна') ? [] : Object.entries(this.props.futureSupplies[data.columns[index]]).map((dateAmountPair,i) => {
+                                clg(dateAmountPair);
                                 const correction = 1;
                                 !multipleSuppliesController[dateAmountPair[0]] && (multipleSuppliesController[dateAmountPair[0]] = 0);
                                 const supplyDate = new Date(dateAmountPair[0]);
@@ -1901,7 +1905,7 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                                     symbolKeepAspect: true,
                                     symbolSize: 45,
                                     xAxis: supplyDateWithCorrection,
-                                    y: 125,
+                                    y: 135,
                                     emphasis: {
                                         label: {
                                             show: true,
@@ -1911,7 +1915,15 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                                                 return "white";
                                             },
                                             fontWeight: 'bold',
-                                            formatter: () => `${dateAmountPair[1]} ${intl.formatMessage({id:"leftovers.chart.future-supplies.doses of", defaultMessage: "доз"})} ${intl.formatMessage({id:"direct-translation."+data.columns[index], defaultMessage:data.columns[index]})}\n${intl.formatMessage({id:"leftovers.chart.future-supplies.will be delivered on", defaultMessage: "будуть доставлені"})} ${supplyDate.toLocaleDateString("uk-UA")}`,
+                                            formatter: () => `${dateAmountPair[1]['Кількість доз']} ` + 
+                                            `${intl.formatMessage({id:"leftovers.chart.future-supplies.doses of", defaultMessage: "доз"})} ` +
+                                            `${intl.formatMessage({id:"direct-translation."+data.columns[index], defaultMessage:data.columns[index]})}` + 
+                                            `\n` + 
+                                            `${intl.formatMessage({id:"leftovers.chart.future-supplies.will be delivered on", defaultMessage: "будуть доставлені"})} ` +
+                                            `${supplyDate.toLocaleDateString("uk-UA")}` +
+                                            `\n` +
+                                            `${intl.formatMessage({id:"leftovers.chart.future-supplies.responsible for import", defaultMessage: "Відповідальний за імпорт"})}: ` +
+                                            `${dateAmountPair[1]['Відповідальний за імпорт'].length < 35 ? dateAmountPair[1]['Відповідальний за імпорт'] : dateAmountPair[1]['Відповідальний за імпорт'].slice(0, 35 - 1) + '...'}`
                                         }
                                     }
                                 };
@@ -1975,8 +1987,6 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
         window.setTimeout(() => window.clearInterval(interval), 600);
         this.setState({ toggleMap: !this.state.toggleMap });
     }
-
-    
 
     /*
     Depending on if the usage is includded,  different sections are rendered:
@@ -2205,6 +2215,7 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                                     data={this.props.data}
                                     averageUsage={this.props.averageUsage}
                                     selectedRegion={this.props.selectedRegion}
+                                    noFutureSuppliesForecast={this.props.noFutureSuppliesForecast}
 
                                     defaultOption={defaultOption}
 
@@ -2530,6 +2541,11 @@ class VaccineCoverageChartComponent extends React.Component {
         const intl = this.context;
         if (!this.state.mapView) {
             let data = this.props.data[this.props.selectedRegion];
+            clg(data);
+            if (this.props.selectedRegion === 'Україна'){
+                data = this.props.noFutureSuppliesForecast['Україна'];
+            }
+            clg(data);
             let coverage = data.columns.reduce((acc, item, i) => {
                 // Calculate the difference in month between two dates (index dates and report date)
                 let index = data.data[i].findIndex(el => el == 0);
@@ -3580,6 +3596,7 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
             12: intl.formatMessage({id:`leftovers.infographics.required-supply.year-supplied`, defaultMessage:"Проведений аналіз показує,\nщо потреба регіону покрита на рік"})
         };
 
+        region == 'Україна' && (data = this.props.noFutureSuppliesForecast)
         const coverage = data.columns.reduce((acc, item, i) => {
             // Calculate the difference in month between two dates (index dates and report date)
             let index = data.data[i].findIndex(el => el == 0);

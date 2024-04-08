@@ -493,7 +493,6 @@ class RegionalTextSectionComponent extends React.Component {
     }
 
     exportTimedOutReports = () => {
-        clg(this.state.timed_out_reports);
         const intl = this.context;
         const data = this.state.timed_out_reports;
         const aoa = [[intl.formatMessage({id:'direct-translation.REGION', defaultMessage:'Регіон'}), intl.formatMessage({id:'direct-translation.AMOUNT', defaultMessage:'Кількість'}), intl.formatMessage({id:'direct-translation.FACILITIES', defaultMessage:'Заклади'})]];
@@ -1591,7 +1590,6 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
     static contextType = IntlContext;
 
     exportToExcel = () => {
-        clg(this.props.data);
         const intl = this.context;
         let titles, aoa;
 
@@ -1892,7 +1890,6 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                     }),
                     markPoint: {
                         data: (!this.props.futureSupplies[data.columns[index]] || this.props.selectedRegion!='Україна') ? [] : Object.entries(this.props.futureSupplies[data.columns[index]]).map((dateAmountPair,i) => {
-                                clg(dateAmountPair);
                                 const correction = 1;
                                 !multipleSuppliesController[dateAmountPair[0]] && (multipleSuppliesController[dateAmountPair[0]] = 0);
                                 const supplyDate = new Date(dateAmountPair[0]);
@@ -2541,11 +2538,9 @@ class VaccineCoverageChartComponent extends React.Component {
         const intl = this.context;
         if (!this.state.mapView) {
             let data = this.props.data[this.props.selectedRegion];
-            clg(data);
             if (this.props.selectedRegion === 'Україна'){
                 data = this.props.noFutureSuppliesForecast['Україна'];
             }
-            clg(data);
             let coverage = data.columns.reduce((acc, item, i) => {
                 // Calculate the difference in month between two dates (index dates and report date)
                 let index = data.data[i].findIndex(el => el == 0);

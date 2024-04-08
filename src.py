@@ -30,6 +30,15 @@ def log_warning(message, category, filename, lineno, file=None, line=None):
     warn.warn(warning)
 warnings.showwarning = log_warning
 
+log = logging.getLogger("Main")
+log.setLevel(LOGGING_LEVEL)
+# Configure the file to which the logger will write
+file_handler = logging.FileHandler(logging_file, mode='w')
+formatter = logging.Formatter('\n%(asctime)s :: %(levelname)s\n%(message)s')
+file_handler.setFormatter(formatter)
+log.addHandler(file_handler)
+log = log.debug
+
 debug = logging.getLogger("Main")
 debug.setLevel(LOGGING_LEVEL)
 # Configure the file to which the logger will write
@@ -163,7 +172,7 @@ def get_data(
 
 
 def get_national_leftovers(filepath: Path = DATA_FOLDER/'Auxillary'/'Залишки нацрівня.xlsx') -> pd.DataFrame:
-    national_leftovers_df = pd.read_excel(filepath, sheet_name='Залишки і поставки')
+    national_leftovers_df = pd.read_excel(SPECIFIC_NATIONAL_STOCK_FILE or filepath, sheet_name='Залишки і поставки')
     national_leftovers_df.rename(columns={'Вакцина': 'Міжнародна непатентована назва', 'Залишок': 'Кількість доз'}, inplace=True)
     national_leftovers_df['Міжнародна непатентована назва'] = national_leftovers_df['Міжнародна непатентована назва'].replace('Хіб', 'ХІБ')
     national_leftovers_df['Регіон'] = 'Україна'
@@ -568,6 +577,7 @@ def accumulate(
         vaccines_expected_to_expire: t.Dict[str, pd.DataFrame],
         expiration_timelines: t.Dict[str, pd.DataFrame],
         usage_based_expiration_timelines: t.Dict[str, pd.DataFrame],
+        no_future_supplies_usage_based_expiration_timelines_for_ukraine: t.Dict[str, pd.DataFrame],
         source_filepath: Path = 'src/app-source.js',
         destination_filepath: Path = 'src/app.js'
     ):
@@ -633,6 +643,7 @@ def accumulate(
             json.dumps(date_based_pivot_usage, ensure_ascii=False),
             mean_trends.to_json(orient='index', force_ascii=False),
             json.dumps(future_supplies_export),
+            json.dumps(no_future_supplies_usage_based_expiration_timelines_for_ukraine, default=lambda obj: pd.DataFrame.to_json(obj, orient='split', force_ascii=False)),
             # ——————————————————————————— SECTION 5. Leftovers+Usages+Expirations ————————————————————————————
             
             # ——————————————————————————————————————— Main App Section ———————————————————————————————————————

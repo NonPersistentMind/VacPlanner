@@ -17,7 +17,8 @@ from src import (
     compute_usage_based_expiration_timelines,
     compute_waning_expiration_based_timelines,
     accumulate,
-    debug
+    debug,
+    log
 )
 from config import DATA_FOLDER, SPECIFIC_DATASOURCE
 
@@ -60,7 +61,8 @@ if __name__ == '__main__':
         REPORT_DATE,
         PICK_SUPPLIES_MASK,
     )
-    no_future_supplies_usage_based_expiration_timelines, _, _ = compute_usage_based_expiration_timelines(
+    debug(usage_based_expiration_timelines['Україна'])
+    no_future_supplies_usage_based_expiration_timelines_for_ukraine, _, _ = compute_usage_based_expiration_timelines(
         df,
         no_future_supplies_ukrainian_waning_expiration_based_timelines,
         average_usage,
@@ -69,32 +71,37 @@ if __name__ == '__main__':
         PICK_SUPPLIES_MASK,
         specific_regions=['Україна'],
     )
-    debug(no_future_supplies_usage_based_expiration_timelines)
+    debug(no_future_supplies_usage_based_expiration_timelines_for_ukraine['Україна'])
     
-    print("".center(100, "-"))
-    print("Potential waste if treating Ukraine as a whole:\n")
-    print(ukraine_based_expiration)
-    print("".center(100, "-"))
+    log("".center(100, "-"))
+    log("Potential waste if treating Ukraine as a whole:\n")
+    log(ukraine_based_expiration)
+    log("".center(100, "-"))
 
     mean_trends = compute_usage_trends(pivot_usage, REPORT_DATE)
     
     
-    # accumulate(
-    #     REPORT_DATE,
-    #     df,
-    #     region_with_foundsource_df,
-    #     timed_out_reports,
-    #     region_df,
-    #     compute_vaccines_left_sorted(region_df),
-    #     institutional_level_data_df,
-    #     average_usage,
-    #     mean_trends, 
-    #     date_based_pivot_usage, 
-    #     compute_future_supplies_export(compute_future_supplies(national_leftovers)),
-    #     waning_expiration_based_timelines,
-    #     vaccines_expected_to_expire,
-    #     expiration_timelines,
-    #     usage_based_expiration_timelines,
-    # )
+    accumulate(
+        REPORT_DATE,
+        df,
+        region_with_foundsource_df,
+        timed_out_reports,
+        region_df,
+        compute_vaccines_left_sorted(region_df),
+        institutional_level_data_df,
+        average_usage,
+        mean_trends, 
+        date_based_pivot_usage, 
+        compute_future_supplies_export(compute_future_supplies(national_leftovers), extended=True),
+        waning_expiration_based_timelines,
+        vaccines_expected_to_expire,
+        expiration_timelines,
+        usage_based_expiration_timelines,
+        no_future_supplies_usage_based_expiration_timelines_for_ukraine,
+    )
+    
+    # Call webpack to bundle the frontend
+    import subprocess
+    subprocess.run(['./node_modules/.bin/webpack'])
     
     

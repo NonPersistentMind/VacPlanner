@@ -5,6 +5,8 @@ plt.style.use('fivethirtyeight')
 
 from utils import *
 from config import *
+
+# Create necessary folders and files
 Path.mkdir(RESULTS_FOLDER, exist_ok=True, parents=True)
 Path.mkdir(DATA_FOLDER, exist_ok=True, parents=True)
 Path.mkdir(SOURCE_FOLDER, exist_ok=True, parents=True)
@@ -13,15 +15,11 @@ Path.touch(warnings_file, exist_ok=True)
 Path.touch(logging_file, exist_ok=True)
 
 
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     filename='/dev/null',
-# )
-
 warn = logging.getLogger("Warnings")
 warn.setLevel(LOGGING_LEVEL)
 # Configure the file to which the logger will write
 file_handler = logging.FileHandler(warnings_file, mode='w')
+file_handler.setLevel(LOGGING_LEVEL)
 formatter = logging.Formatter('\n%(asctime)s :: %(levelname)s\n%(message)s')
 file_handler.setFormatter(formatter)
 warn.addHandler(file_handler)
@@ -30,19 +28,29 @@ def log_warning(message, category, filename, lineno, file=None, line=None):
     warn.warn(warning)
 warnings.showwarning = log_warning
 
-log = logging.getLogger("Main")
+log = logging.getLogger("Info")
+log.propagate = False
 log.setLevel(LOGGING_LEVEL)
 # Configure the file to which the logger will write
-file_handler = logging.FileHandler(logging_file, mode='w')
-formatter = logging.Formatter('\n%(asctime)s :: %(levelname)s\n%(message)s')
+file_handler = logging.StreamHandler(sys.stdout)
+file_handler.setLevel(LOGGING_LEVEL)
+formatter = logging.Formatter(
+    ''.center(100, '–') + 
+    '\n' +
+    '%(asctime)s :: %(levelname)s\n%(message)s\n' +
+    ''.center(100, '–') + 
+    '\n'
+)
 file_handler.setFormatter(formatter)
 log.addHandler(file_handler)
-log = log.debug
+log = log.info
 
-debug = logging.getLogger("Main")
+debug = logging.getLogger("Debugger")
+debug.propagate = False
 debug.setLevel(LOGGING_LEVEL)
 # Configure the file to which the logger will write
 file_handler = logging.FileHandler(logging_file, mode='w')
+file_handler.setLevel(LOGGING_LEVEL)
 formatter = logging.Formatter('\n%(asctime)s :: %(levelname)s\n%(message)s')
 file_handler.setFormatter(formatter)
 debug.addHandler(file_handler)

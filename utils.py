@@ -1,6 +1,6 @@
 from pathlib import Path
 from scipy.spatial import ConvexHull
-import json
+import json, logging
 from config import SOURCE_FOLDER
 
 ALL_SLICE = slice(None)
@@ -99,4 +99,10 @@ region_positions = {
     'Чернівецька': 21+1,
     'Чернігівська': 22+1,
     'м. Київ': 23+1
+}
+
+EC = {
+    'bold': '\033[1m',
+    'italic': '\033[3m',
+    'default': '\033[0m'
 }

@@ -27,8 +27,12 @@ if __name__ == '__main__':
         DATA_FILE = SPECIFIC_DATASOURCE
     else:
         DATA_FILE = get_latest_file(DATA_FOLDER)
+    
+    log(f"Starting to process {DATA_FILE}")
 
     df, REPORT_DATE, timed_outs, national_leftovers = get_data(DATA_FILE)
+    
+    log(f"Data loaded. {REPORT_DATE} is the file's report date.")
 
     region_with_foundsource_df = compute_region_with_foundsource_df(df)
 
@@ -43,10 +47,12 @@ if __name__ == '__main__':
     no_future_supplies_ukrainian_expiration_timelines, _ = compute_expiration_timelines(df, national_leftovers, include_future_supplies=False, specific_regions=['Україна'])
     debug(no_future_supplies_ukrainian_expiration_timelines)
     
+    log(f"Starting to prepare usage data.")
     usages = get_usage()
     pivot_usage = compute_pivot_usage(usages, vaccines_tracked=expiration_timelines['Україна'].columns)
     average_usage = compute_average_usage(usages)
     date_based_pivot_usage = compute_date_based_pivot_usage(pivot_usage, REPORT_DATE)
+    log(f"Usage preparation done. Starting to compute expiration forecasts")
     
     waning_expiration_based_timelines = compute_waning_expiration_based_timelines(df, expiration_timelines, REPORT_DATE, PICK_SUPPLIES_MASK)
     debug(waning_expiration_based_timelines['Україна'])
@@ -72,11 +78,9 @@ if __name__ == '__main__':
         specific_regions=['Україна'],
     )
     debug(no_future_supplies_usage_based_expiration_timelines_for_ukraine['Україна'])
+    log(f"Forecasting done. Accumulating data.")
     
-    log("".center(100, "-"))
-    log("Potential waste if treating Ukraine as a whole:\n")
-    log(ukraine_based_expiration)
-    log("".center(100, "-"))
+    log("Potential waste if treating Ukraine as a whole:\n %s", ukraine_based_expiration)
 
     mean_trends = compute_usage_trends(pivot_usage, REPORT_DATE)
     

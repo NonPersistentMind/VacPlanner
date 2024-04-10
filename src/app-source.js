@@ -2272,6 +2272,7 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                                         data={this.props.data}
                                         averageUsage={this.props.averageUsage}
                                         selectedRegion={this.props.selectedRegion}
+                                        noFutureSuppliesForecast={this.props.noFutureSuppliesForecast}
 
                                         addNewChart={this.props.addNewChart}
                                         defaultOption={defaultOption}
@@ -3582,8 +3583,8 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
         Object.values(this.charts).forEach(chart=>chart.resize());
 
         const region = this.props.selectedRegion;
-        const data = this.props.data[this.props.selectedRegion];
         const usage = this.props.averageUsage[this.props.selectedRegion];
+        let data = this.props.data[this.props.selectedRegion];
 
         const phrases = {
             3: intl.formatMessage({id:`leftovers.infographics.required-supply.three-month-supplied`, defaultMessage:"Достатня забезпеченість\nдля покриття потреби\nна найближчі 3 місяці"}),
@@ -3591,7 +3592,7 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
             12: intl.formatMessage({id:`leftovers.infographics.required-supply.year-supplied`, defaultMessage:"Проведений аналіз показує,\nщо потреба регіону покрита на рік"})
         };
 
-        region == 'Україна' && (data = this.props.noFutureSuppliesForecast)
+        region == 'Україна' && (data = this.props.noFutureSuppliesForecast['Україна'])
         const coverage = data.columns.reduce((acc, item, i) => {
             // Calculate the difference in month between two dates (index dates and report date)
             let index = data.data[i].findIndex(el => el == 0);

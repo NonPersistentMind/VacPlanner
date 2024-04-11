@@ -85,12 +85,12 @@ def get_filename_date(filename: str) -> t.Dict[str, str]:
         raise ValueError(f'Filename {filename} does not contain a date in the format "YYYY-MM-DD"')
         
 
-def get_latest_file(DATA_FOLDER) -> t.List[Path]:
+def get_latest_file(DATA_FOLDER: str | Path) -> Path:
     LATEST_FILE = sorted([filename for filename in DATA_FOLDER.iterdir() if filename.stem not in ['.DS_Store', 'Auxillary', 'Historical Data']], key=lambda fn: dt.date.fromisoformat(fn.name[-5 - 10:-5]))[-1]        
     return LATEST_FILE
 
-def _assume_report_date(df: pd.DataFrame) -> dt.datetime:
-    return df['дата оновлення'].max()
+def _assume_report_date(df: pd.DataFrame) -> pd.Timestamp:
+    return df['дата оновлення'].max().to_pydatetime()
 
 def _inverse_correction(df: pd.DataFrame, target: str, based_on: str, new_label:str = None, method:str = "popular", verbose: bool = False) -> None:
     # ———————————————————————————— Визначити назву вакцини за серією препарату і переписати назви у вхідних даних ————————————————————————————
@@ -137,30 +137,52 @@ def _clean_data(df: pd.DataFrame) -> None:
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(vaccine_shorts)
     df = df[~df['Міжнародна непатентована назва'].isin(VACCINES_SKIPPED)]
 
-    # df['дата оновлення'] = pd.to_datetime(df['дата оновлення']).dt.date
+    df['дата оновлення'] = pd.to_datetime(df['дата оновлення'], dayfirst=True)
+    df['Термін придатності'] = pd.to_datetime(df['Термін придатності'], dayfirst=True)
 
     # Remove any data reporting vaccine with expiration date older than the latest report date
     REPORT_DATE = _assume_report_date(df)
     df.loc[df['дата оновлення'].isna(), 'дата оновлення'] = REPORT_DATE - dt.timedelta(days=14)
     timed_outs = df[(REPORT_DATE - df['дата оновлення']) > dt.timedelta(days=7)]
     df = df[df['Термін придатності'] > REPORT_DATE]
-
-    df['Термін придатності'] = pd.to_datetime(df['Термін придатності']).dt.date
+    
+    df['Термін придатності'] = df['Термін придатності'].dt.date
     
     return df, REPORT_DATE.date(), timed_outs
 
 
 def get_data(
-        filepath: Path,
         national_stock_filepath: Path = DATA_FOLDER/'Auxillary'/'Залишки нацрівня.xlsx',
         autosave: bool = True,
         refresh=False
     ) -> t.Tuple[pd.DataFrame, dt.date, pd.DataFrame, pd.DataFrame]:
-    filedate = get_filename_date(filepath.stem)
+    if SPECIFIC_DATASOURCE:
+        filepath = SPECIFIC_DATASOURCE
+        filename = filepath
+    else:
+        filepath = get_latest_file(DATA_FOLDER)
+        filename = filepath.name
+        
+    log(f"Starting to process {filename[:40] + (len(filename) > 40 and '...' or '')}")
+    
+    # If filepath is a valid http[s] url, download the file and process it
+    if filename.startswith('http://') or filename.startswith('https://'):
+        URL = True
+        filedate = dt.date.today()
+        filedate = {'year': filedate.year, 'month': filedate.month, 'day': filedate.day}
+    else:
+        URL = False
+        filedate = get_filename_date(filepath.stem)
+        
     national_leftovers_df = get_national_leftovers(national_stock_filepath)
     
     if refresh or not Path.exists(DATA_FOLDER / 'Historical Data' / f'{filedate["year"]}-{filedate["month"]}-{filedate["day"]}.pkl'):
-        df = pd.read_excel(filepath, sheet_name='Залишки поточні', dtype={' код ЄДРПОУ': str}, engine='openpyxl')
+        df = pd.read_csv(filepath) if URL else pd.read_excel(
+            filepath, 
+            sheet_name='Залишки поточні', 
+            dtype={' код ЄДРПОУ': str}, 
+            engine='openpyxl'
+        )
         df, REPORT_DATE, timed_outs = _clean_data(df)
         
         df = pd.concat([df, national_leftovers_df[national_leftovers_df['Дата поставки'].isna()][['Міжнародна непатентована назва', 'Регіон', 'Термін придатності', 'Кількість доз', 'Джерело фінансування']]], ignore_index=True)
@@ -170,13 +192,13 @@ def get_data(
             Path.mkdir(DATA_FOLDER / 'Historical Data', exist_ok=True, parents=True)
             df.to_pickle(DATA_FOLDER / 'Historical Data' / f'{filedate["year"]}-{filedate["month"]}-{filedate["day"]}.pkl')
             timed_outs.to_pickle(DATA_FOLDER / 'Historical Data' / f'{filedate["year"]}-{filedate["month"]}-{filedate["day"]}_timed_outs.pkl')
-                
-        return df, REPORT_DATE, timed_outs, national_leftovers_df
     else:
         df = pd.read_pickle(DATA_FOLDER / 'Historical Data' / f'{filedate["year"]}-{filedate["month"]}-{filedate["day"]}.pkl')
         timed_outs = pd.read_pickle(DATA_FOLDER / 'Historical Data' / f'{filedate["year"]}-{filedate["month"]}-{filedate["day"]}_timed_outs.pkl')
-        REPORT_DATE = _assume_report_date(df)
-        return df, REPORT_DATE.date(), timed_outs, national_leftovers_df
+        REPORT_DATE = _assume_report_date(df).date()
+        
+    log(f"Data loaded. {REPORT_DATE} is the file's report date.")
+    return df, REPORT_DATE, timed_outs, national_leftovers_df
 
 
 def get_national_leftovers(filepath: Path = DATA_FOLDER/'Auxillary'/'Залишки нацрівня.xlsx') -> pd.DataFrame:
@@ -387,7 +409,10 @@ def compute_waning_expiration_based_timelines(
 
 
 def get_usage(filepath: Path = DATA_FOLDER / "Auxillary" / "Використання.csv") -> pd.DataFrame:
-    usages = pd.read_csv(filepath)
+    # usages = pd.read_csv(filepath)
+    log(f"Starting to prepare usage data.")
+    usages = pd.read_excel(DATA_FOLDER / "Auxillary" / "ВСЬОГО.xlsx", engine='openpyxl', sheet_name='Використання')
+    
     usages['Дата'] = pd.to_datetime(usages['Дата'])
     usages['Міжнародна непатентована назва'] = usages['Міжнародна непатентована назва'].replace(vaccine_shorts)
     usages['Регіон'] = usages['Регіон'].replace("Київ", "м. Київ")

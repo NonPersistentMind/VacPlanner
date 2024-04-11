@@ -20,20 +20,10 @@ from src import (
     debug,
     log
 )
-from config import DATA_FOLDER, SPECIFIC_DATASOURCE
 
-if __name__ == '__main__':
-    if SPECIFIC_DATASOURCE:
-        DATA_FILE = SPECIFIC_DATASOURCE
-    else:
-        DATA_FILE = get_latest_file(DATA_FOLDER)
+if __name__ == '__main__':    
+    df, REPORT_DATE, timed_outs, national_leftovers = get_data()
     
-    log(f"Starting to process {DATA_FILE}")
-
-    df, REPORT_DATE, timed_outs, national_leftovers = get_data(DATA_FILE)
-    
-    log(f"Data loaded. {REPORT_DATE} is the file's report date.")
-
     region_with_foundsource_df = compute_region_with_foundsource_df(df)
 
     region_df = compute_region_df(df, REPORT_DATE)
@@ -47,7 +37,6 @@ if __name__ == '__main__':
     no_future_supplies_ukrainian_expiration_timelines, _ = compute_expiration_timelines(df, national_leftovers, include_future_supplies=False, specific_regions=['Україна'])
     debug(no_future_supplies_ukrainian_expiration_timelines)
     
-    log(f"Starting to prepare usage data.")
     usages = get_usage()
     pivot_usage = compute_pivot_usage(usages, vaccines_tracked=expiration_timelines['Україна'].columns)
     average_usage = compute_average_usage(usages)

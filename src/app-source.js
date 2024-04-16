@@ -2247,8 +2247,10 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                                         <div className="tile is-parent">
                                             <div className="tile is-child box no-padding">
                                                     <VaccinesExpectedToExpireChartComponent
+                                                        selectedRegion={this.props.selectedRegion}
                                                         addNewChart={this.props.addNewChart}
                                                         expirations={totalExpirations}
+                                                        expirationTimelines={expirations}
                                                         maxExpiration={this.maxExpiration}
                                                         defaultOption={defaultOption}
                                                     />
@@ -2811,11 +2813,32 @@ class VaccinesExpectedToExpireChartComponent extends React.Component {
 
     componentDidUpdate() {
         const intl = this.context;
+        const expirationTimelines = this.props.expirationTimelines;
 
         let notZeroExpirations = Object.keys(this.props.expirations).reduce((acc, item) => {
             if (this.props.expirations[item] != 0) {
                 acc[item] = this.props.expirations[item];
+                // acc[intl.formatMessage({id:`direct-translation.${item}`, defaultMessage: item})] = acc[item];
             }
+            return acc;
+        }, {});
+
+        // Then find the indices of all non-zero values in expirationTimelines.data[i] (list)
+        const expirationDict = Object.keys(notZeroExpirations).reduce((vaccineAcc, vaccine) => {
+            const vaccineIndex = expirationTimelines.columns.indexOf(vaccine);
+            let vaccineTrsl = intl.formatMessage({id:`direct-translation.${vaccine}`, defaultMessage: vaccine});
+            vaccineAcc[vaccineTrsl] = expirationTimelines.data[vaccineIndex].reduce((dateAmountAcc, val, index) => {
+                if (val !== 0) {
+                    dateAmountAcc.dates.push(new Date(expirationTimelines.index[index]));
+                    dateAmountAcc.amounts.push(val);
+                }
+                return dateAmountAcc;
+            }, {dates: [], amounts: []});
+            return vaccineAcc;
+        }, {});
+
+        notZeroExpirations = Object.keys(notZeroExpirations).reduce((acc, vaccine) => {
+            acc[intl.formatMessage({id:`direct-translation.${vaccine}`, defaultMessage: vaccine})] = notZeroExpirations[vaccine];
             return acc;
         }, {});
 
@@ -2825,6 +2848,38 @@ class VaccinesExpectedToExpireChartComponent extends React.Component {
             },
             xAxis: {
                 data: Object.keys(notZeroExpirations).map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})),
+            },
+            tooltip: {
+                formatter: (params) => {
+                    const vaccine = params[0].name;
+                    const expirations = expirationDict[vaccine];
+                    let tooltip = `<b>${vaccine}</b>`;
+
+                    tooltip += `<div class="is-flex is-justify-content-space-between mt-3">
+                        <span class="mr-5">
+                            <svg height="10" width="10" class="mr-1">
+                                <circle cx="5" cy="5" r="5" fill="grey"/>
+                            </svg>
+                            <b>${intl.formatMessage({id: "direct-translation.OVERALL", defaultMessage: "Загалом"})}:</b>
+                        </span>
+                        <b>${notZeroExpirations[vaccine]}</b>
+                    </div>
+                    `;
+
+                    tooltip += expirations.dates.map((date, i) => `
+                        <div class="is-flex is-justify-content-space-between mt-2">
+                            <span class="mr-5">
+                                <svg height="10" width="10" class="mr-1">
+                                    <circle cx="5" cy="5" r="5" fill="${params[0].color}"/>
+                                </svg>
+                                ${date.toLocaleDateString()}
+                            </span>
+                            <b>${expirations.amounts[i]}</b>
+                        </div>`
+                    ).join('');
+
+                    return tooltip;
+                }
             },
             series: [
             {
@@ -3032,7 +3087,7 @@ class AverageUsageMapChartComponent extends React.Component {
     }
 }
 
-class UsageBarChartComponent extends React.Component {
+class UsageBarChartComponent extends React.Component { 
     static contextType = IntlContext;
 
     onChartInitialized = (chart) => {

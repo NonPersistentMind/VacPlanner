@@ -30,6 +30,7 @@
     "direct-translation.АР Крим": "Crimea",
     "direct-translation.Крим": "Crimea",
     "direct-translation.Вінницька": "Vinnytska",
+    "direct-translation.Невідома область": "Unspecified region",
 
 
     "direct-translation.Січень": "January",
@@ -63,7 +64,7 @@
     "direct-translation.TOP": "Top",
     "direct-translation.FACILITIES": "facilities",
     "direct-translation.FACILITY": "facility",
-    "direct-translation.OVERALL": "overall",
+    "direct-translation.OVERALL": "Overall",
     "direct-translation.UNITS": "doses",
     "direct-translation.REGION": "region",
     "direct-translation.REGIONS": "regions",

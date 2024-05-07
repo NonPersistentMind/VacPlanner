@@ -11,6 +11,7 @@ openpyxl = "*"
 xlrd = "*"
 numpy = "*"
 requests = "*"
+seaborn = "*"
 
 [dev-packages]
 

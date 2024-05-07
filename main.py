@@ -22,7 +22,9 @@ from src import (
 )
 
 if __name__ == '__main__':    
-    df, REPORT_DATE, timed_outs, national_leftovers = get_data()
+    df, REPORT_DATE, timed_outs, national_leftovers = get_data(refresh=True)
+    
+    debug(df["Регіон"].unique())
     
     region_with_foundsource_df = compute_region_with_foundsource_df(df)
 
@@ -72,7 +74,6 @@ if __name__ == '__main__':
     log("Potential waste if treating Ukraine as a whole:\n %s", ukraine_based_expiration)
 
     mean_trends = compute_usage_trends(pivot_usage, REPORT_DATE)
-    
     
     accumulate(
         REPORT_DATE,

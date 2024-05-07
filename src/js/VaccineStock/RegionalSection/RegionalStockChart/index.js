@@ -264,7 +264,7 @@ export default function RegionalStockChartComponent({regionalStock, selectedFilt
                 emphasis: {
                     focus: 'series'
                 },
-                data: Object.values(data).map(regionalVaccines => regionalVaccines[vaccines[i]] || 0)
+                data: Object.values(regions_raw).map(region => data[region][vaccines[i]] || 0)
             });
         }
 

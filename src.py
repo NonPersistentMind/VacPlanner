@@ -124,6 +124,9 @@ def _clean_data(df: pd.DataFrame) -> None:
     df['Регіон'] = df['Регіон'].str.replace(' область', '')
     df['Регіон'] = df['Регіон'].str.replace(' обл.', '')
     df['Регіон'] = df['Регіон'].str.replace(' обл', '')
+    if df['Регіон'].isna().any():
+        debug(f"Found NaN values in 'Регіон' column. Skipping them.")
+        df = df[df['Регіон'].notna()]
     
     df = df[df["Міжнародна непатентована назва"].notna()]
     df['Регіон'] = df['Регіон'].replace('чЕРНІГІВСЬКА ОБЛАСТЬ', 'Чернігівська область')
@@ -165,13 +168,14 @@ def get_data(
         
     log(f"Starting to process {filename[:40] + (len(filename) > 40 and '...' or '')}")
     
-    # If filepath is a valid http[s] url, download the file and process it
+    # If filepath is a valid http[s] url, process it as URL
+    URL = False
     if filename.startswith('http://') or filename.startswith('https://'):
         URL = True
+        filepath = filepath.replace('/edit#gid=', '/export?format=csv&gid=')
         filedate = dt.date.today()
         filedate = {'year': filedate.year, 'month': filedate.month, 'day': filedate.day}
     else:
-        URL = False
         filedate = get_filename_date(filepath.stem)
         
     national_leftovers_df = get_national_leftovers(national_stock_filepath)
@@ -201,14 +205,52 @@ def get_data(
     return df, REPORT_DATE, timed_outs, national_leftovers_df
 
 
-def get_national_leftovers(filepath: Path = DATA_FOLDER/'Auxillary'/'Залишки нацрівня.xlsx') -> pd.DataFrame:
-    national_leftovers_df = pd.read_excel(SPECIFIC_NATIONAL_STOCK_FILE or filepath, sheet_name='Залишки і поставки')
-    national_leftovers_df.rename(columns={'Вакцина': 'Міжнародна непатентована назва', 'Залишок': 'Кількість доз'}, inplace=True)
-    national_leftovers_df['Міжнародна непатентована назва'] = national_leftovers_df['Міжнародна непатентована назва'].replace('Хіб', 'ХІБ')
-    national_leftovers_df['Регіон'] = 'Україна'
-    national_leftovers_df['Термін придатності'] = national_leftovers_df['Термін придатності'].dt.date 
-    national_leftovers_df['Дата поставки'] = pd.to_datetime(national_leftovers_df['Дата поставки']).dt.date 
+def get_national_leftovers(filepath: Path = DATA_FOLDER/'Auxillary'/'Залишки нацрівня.xlsx', custom_processor: t.Callable[(...), pd.DataFrame] | None = None) -> pd.DataFrame:
+    # Find the date of the most recent monday (the day the data is usually updated)
+    today = dt.date.today()
+    recent_monday = today - dt.timedelta(days=today.weekday())
+    URL = False
+    # Check if the specific source is a URL
+    if SPECIFIC_NATIONAL_STOCK_FILE.startswith('http://') or SPECIFIC_NATIONAL_STOCK_FILE.startswith('https://'):
+        URL = SPECIFIC_NATIONAL_STOCK_FILE.replace('/edit#gid=', '/export?format=csv&gid=')
+    if not Path.exists(DATA_FOLDER / f"/Auxillary/Залишки нацрівня {recent_monday}.pkl"):
+        if URL:
+            debug(f"Reading national leftovers from {URL}")
+            national_leftovers_df = pd.read_csv(URL)
+        else:
+            debug(f"Reading national leftovers from {filepath}")
+            national_leftovers_df = pd.read_excel(filepath, sheet_name='Залишки і поставки')        
+        national_leftovers_df = national_leftovers_df.rename(columns={'Вакцина': 'Міжнародна непатентована назва', 'Залишок': 'Кількість доз'})
+        national_leftovers_df['Міжнародна непатентована назва'] = national_leftovers_df['Міжнародна непатентована назва'].replace('Хіб', 'ХІБ')
+        national_leftovers_df['Регіон'] = 'Україна'
+        national_leftovers_df['Термін придатності'] = pd.to_datetime(national_leftovers_df['Термін придатності'], format="%d.%m.%Y").dt.date 
+        national_leftovers_df['Дата поставки'] = pd.to_datetime(national_leftovers_df['Дата поставки'], format="%d.%m.%Y").dt.date 
+        
+        national_leftovers_df.to_pickle(DATA_FOLDER / f"Auxillary/Залишки нацрівня {recent_monday}.pkl")
+    else:
+        debug(f"Reading national leftovers from {DATA_FOLDER}/Auxillary/Залишки нацрівня {recent_monday}.pkl")
+        national_leftovers_df = pd.read_pickle(f"{DATA_FOLDER}/Auxillary/Залишки нацрівня {recent_monday}.pkl")
     return national_leftovers_df
+
+def get_nationalStock_with_storage():
+    national_stock = get_national_leftovers()
+    national_stock = national_stock.rename(columns={'Коментар': 'Місце зберігання'})
+    return national_stock[[
+    'Міжнародна непатентована назва', 
+    'Регіон', 
+    'Кількість доз', 
+    'Місце зберігання',
+    'Джерело фінансування'
+    ]].groupby([
+        'Міжнародна непатентована назва', 
+        'Регіон', 
+        'Джерело фінансування',
+        'Місце зберігання'
+    ])[[                
+        'Кількість доз', 
+    ]].agg({
+        'Кількість доз': 'sum',
+    }).reset_index()
     
 
 def compute_future_supplies(national_leftovers_df: pd.DataFrame) -> pd.DataFrame:
@@ -556,12 +598,12 @@ def compute_usage_based_expiration_timelines(
             available_vaccines_expected_to_expire = (vaccines_rendered_unavailable - available_vaccine_used).clip(lower=0)
             vaccines_expected_to_expire_in_region.loc[expiration_date] = available_vaccines_expected_to_expire
             
-            # latest_vaccines_leftovers_in_region = (vaccines_leftovers_in_region.iloc[-1] - available_vaccines_expected_to_expire - vaccine_used).clip(lower=0)
             latest_vaccines_leftovers_in_region = (vaccines_leftovers_in_region.iloc[-1] - available_vaccines_expected_to_expire - vaccine_used)
+            # Determine overconsumption and remove it from available_vaccine_used
             overconsumption = latest_vaccines_leftovers_in_region.clip(upper=0)
             available_vaccine_used += overconsumption
             
-            # Ensure we didn't use more vaccines than we had
+            # Ensure we didn't use more vaccines than we had!
             latest_vaccines_leftovers_in_region = latest_vaccines_leftovers_in_region.clip(lower=0)
             # Add new supplies to the count
             if region == 'Україна' and expiration_date in expiration_timelines[region].index:
@@ -633,6 +675,7 @@ def accumulate(
             # json.dumps(region_df.to_dict('list'), ensure_ascii=False), 
             # json.dumps(region_df.index.tolist(), ensure_ascii=False),
             json.dumps(region_with_foundsource_df.to_dict('list'), ensure_ascii=False),
+            get_nationalStock_with_storage().to_json(orient='columns', force_ascii=False),
             # —————————————————————————————————— Regional Chart. SECTION 1 ———————————————————————————————————
             # ——————————————————————————————————— Regional HTML. SECTION 2 ———————————————————————————————————
             # Timed out stock reports

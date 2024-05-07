@@ -1,0 +1,64 @@
+
+2024-05-07 15:15:31,171 :: WARNING
+/Users/andrewlickbrekht/Desktop/Business/Work/SafeMed/DevTools/Vaccine Administration Analysis/src.py:132: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df['Регіон'] = df['Регіон'].replace('чЕРНІГІВСЬКА ОБЛАСТЬ', 'Чернігівська область')
+
+
+2024-05-07 15:15:31,172 :: WARNING
+/Users/andrewlickbrekht/Desktop/Business/Work/SafeMed/DevTools/Vaccine Administration Analysis/src.py:133: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df['Джерело фінансування'] = df['Джерело фінансування'].fillna('Невідоме джерело')
+
+
+2024-05-07 15:15:31,174 :: WARNING
+/Users/andrewlickbrekht/Desktop/Business/Work/SafeMed/DevTools/Vaccine Administration Analysis/src.py:134: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df['Джерело фінансування'] = df['Джерело фінансування'].replace(['Держбюджет', 'Державний бюджет'], 'Державний бюджет (невідомий рік)')
+
+
+2024-05-07 15:15:32,433 :: WARNING
+/Users/andrewlickbrekht/Desktop/Business/Work/SafeMed/DevTools/Vaccine Administration Analysis/src.py:114: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df[target] = df[[based_on, target]].apply(lambda row: series_df.to_dict()[new_label if new_label else ("Нова " + target)].get(row[based_on], row[target]), axis=1)
+
+
+2024-05-07 15:15:42,604 :: WARNING
+/Users/andrewlickbrekht/Desktop/Business/Work/SafeMed/DevTools/Vaccine Administration Analysis/src.py:114: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df[target] = df[[based_on, target]].apply(lambda row: series_df.to_dict()[new_label if new_label else ("Нова " + target)].get(row[based_on], row[target]), axis=1)
+
+
+2024-05-07 15:15:42,611 :: WARNING
+/Users/andrewlickbrekht/Desktop/Business/Work/SafeMed/DevTools/Vaccine Administration Analysis/src.py:140: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(vaccine_shorts)
+
+
+2024-05-07 15:15:43,127 :: WARNING
+/Users/andrewlickbrekht/.local/share/virtualenvs/Vaccine_Administration_Analysis-tY9_woho/lib/python3.11/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
+  warn(msg)
+
+
+2024-05-07 15:15:46,623 :: WARNING
+/Users/andrewlickbrekht/Desktop/Business/Work/SafeMed/DevTools/Vaccine Administration Analysis/src.py:517: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  trends = pd.concat([trends, difference], axis=0)
+

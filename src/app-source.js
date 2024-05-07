@@ -45,6 +45,7 @@ class RegionalChartSectionComponent extends React.Component {
         super(props);
 
         const data = /*{}*/;
+        const nationalStock = /*{}*/;
 
         this.state = {
             regionalStockData: data['Регіон'].reduce((acc, region, i) => {
@@ -56,15 +57,16 @@ class RegionalChartSectionComponent extends React.Component {
                 }
                 return acc;
             }, {'Регіон': [], 'Джерело фінансування': [], 'Міжнародна непатентована назва': [], 'Кількість доз': []}),
-            nationalStockData: data['Регіон'].reduce((acc, region, i) => {
-                if (region == 'Україна') {
-                    acc['Регіон'].push(region);
-                    acc['Міжнародна непатентована назва'].push(data['Міжнародна непатентована назва'][i]);
-                    acc['Джерело фінансування'].push(data['Джерело фінансування'][i]);
-                    acc['Кількість доз'].push(data['Кількість доз'][i]);
+            nationalStockData: Object.keys(nationalStock['Регіон']).reduce((acc, i) => {
+                if (nationalStock["Регіон"][i] == 'Україна') {
+                    acc['Регіон'].push(nationalStock["Регіон"][i]);
+                    acc['Міжнародна непатентована назва'].push(nationalStock['Міжнародна непатентована назва'][i]);
+                    acc['Місце зберігання'].push(nationalStock['Місце зберігання'][i]);
+                    acc['Джерело фінансування'].push(nationalStock['Джерело фінансування'][i]);
+                    acc['Кількість доз'].push(nationalStock['Кількість доз'][i]);
                 }
                 return acc;
-            }, {'Регіон': [], 'Джерело фінансування': [], 'Міжнародна непатентована назва': [], 'Кількість доз': []}),
+            }, {'Регіон': [], 'Джерело фінансування': [], 'Міжнародна непатентована назва': [], 'Кількість доз': [], 'Місце зберігання': []}),
         }
 
         const foundSourceArray = new Array(...new Set(data['Джерело фінансування']));
@@ -1322,8 +1324,8 @@ class InstitutionalTextSectionComponent extends React.Component {
         const intl = this.context;
         const UKRAINE = intl.formatMessage({id:'direct-translation.Україна', defaultMessage:"Україна"});
         this.setState({
-            allRegions: [UKRAINE].concat([...new Set(this.props.data.map(el => el.Rgn==UKRAINE ? null : el.Rgn).filter(el => el !== null))].sort()),
-            selectedRegion: UKRAINE,
+            allRegions: [UKRAINE].concat([...new Set(this.props.data.map(el => el.Rgn==UKRAINE ? null : el.Rgn).filter(el => el !== null))].sort((a,b)=>a.localeCompare(b))),
+            selectedRegion: UKRAINE
         });
     }
 }

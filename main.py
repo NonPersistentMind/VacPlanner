@@ -22,7 +22,7 @@ from src import (
 )
 
 if __name__ == '__main__':    
-    df, REPORT_DATE, timed_outs, national_leftovers = get_data(refresh=True)
+    df, REPORT_DATE, timed_outs, national_leftovers = get_data()
     
     debug(df["Регіон"].unique())
     

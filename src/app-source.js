@@ -1921,8 +1921,10 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                                             `${intl.formatMessage({id:"leftovers.chart.future-supplies.will be delivered on", defaultMessage: "будуть доставлені"})} ` +
                                             `${supplyDate.toLocaleDateString("uk-UA")}` +
                                             `\n` +
+                                            (dateAmountPair[1]['Відповідальний за імпорт'] && dateAmountPair[1]['Відповідальний за імпорт'].length > 0 ?
                                             `${intl.formatMessage({id:"leftovers.chart.future-supplies.responsible for import", defaultMessage: "Відповідальний за імпорт"})}: ` +
                                             `${dateAmountPair[1]['Відповідальний за імпорт'].length < 35 ? dateAmountPair[1]['Відповідальний за імпорт'] : dateAmountPair[1]['Відповідальний за імпорт'].slice(0, 35 - 1) + '...'}`
+                                            : '')
                                         }
                                     }
                                 };

@@ -30,6 +30,7 @@ import RegionalStockChartComponent from './js/VaccineStock/RegionalSection/Regio
 import NationalStockChartComponent from './js/VaccineStock/RegionalSection/NationalStockChart';
 import DropdownComponent from './js/VaccineStock/RegionalSection/DropdownBlock/DropdownComponent';
 
+const REPORT_TYPE = '/*{}*/';
 const REPORT_DATE = new Date("/*{}*/");
 const ukraineTopoJSON = /*{}*/;
 const allVaccines = /*{}*/;
@@ -622,7 +623,7 @@ class RegionalTextSectionComponent extends React.Component {
                 </nav>
                 <nav className="level is-justify-content-center has-text-light is-mobile mb-5 pb-5">
                     <div className="level-item has-text-centered">
-                        <div>
+                        <div className="height-capped">
                             <p className="title is-5 has-text-light mb-3 is-clickable" onClick={this.exportTimedOutReports}><FormattedMessage id="regional.text.late-reported-leftovers" defaultMessage="Залишки, прозвітовані більше, ніж 7 днів тому"/></p>
                             {
                                 this.state.timed_out_reports.index.map((el, i) => {
@@ -2313,7 +2314,7 @@ class VaccineCoverageChartComponent extends React.Component {
 
     state = {
         mapView: false,
-        vaccineDisplayed: 'ІПВ',
+        vaccineDisplayed: REPORT_TYPE === "Routine" ? "ІПВ" : "Pfizer",
     }
 
     onToggleMapClicked = () => {
@@ -2569,6 +2570,7 @@ class VaccineCoverageChartComponent extends React.Component {
                     name: intl.formatMessage({id: "leftovers.infographics.coverage.series-name", defaultMessage:"Місяців"}),
                     type: 'pictorialBar',
                     symbol: this.barPicture,
+                    symbolSize: 55,
                     symbolRepeat: 'fixed',
                     symbolMargin: '-5%',
                     symbolClip: true,
@@ -3834,7 +3836,7 @@ class App extends React.Component {
                         {({ language, setLanguage }) => (
                         <div>
                             <MenuComponent />
-                            <HeadSectionComponent setLanguage={setLanguage} reportDate={REPORT_DATE}/>
+                            <HeadSectionComponent setLanguage={setLanguage} reportDate={REPORT_DATE} reportType={REPORT_TYPE}/>
                             <RegionalChartSectionComponent vaccineColors={this.state.vaccineColors} addNewChart={this.addNewChart} language={language}/>
                             <RegionalTextSectionComponent dataWithUsage={this.state.dataWithUsage} language={language}/>
                             <InstitutionalComponent addNewChart={this.addNewChart} language={language}/>

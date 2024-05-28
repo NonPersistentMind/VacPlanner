@@ -1,17 +1,17 @@
 export const vaccineColors = [
     '#B66869',
-    // '#ff9074',
+
     '#ffb09c',
     '#f8a83c',
     '#E7CF8D',
     '#00cd97',
-    // '#21ffc5',
+
     '#74ffda',
     '#4fd7ca',
-    // '#6dddd3',
+
     '#afd2c9',
     '#b6ff97',
-    // '#bfffa4',
+
     '#daffcb',
     '#12aafd',
     '#4dbffd',
@@ -35,6 +35,10 @@ namedVaccineColors = namedVaccineColors.reduce((acc, name, index) => {
     acc[name] = vaccineColors[index];
     return acc;
 }, {});
+
+namedVaccineColors['Pfizer'] = '#12aafd';
+namedVaccineColors['Pfizer (дитячий)'] = '#89d4fe';
+namedVaccineColors['Pfizer (дитяча)'] = '#89d4fe';
 
 export const monthMapping = {
     1: 'Січень', 

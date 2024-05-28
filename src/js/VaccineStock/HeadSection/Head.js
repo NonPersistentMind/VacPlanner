@@ -14,10 +14,17 @@ export default class HeadSectionComponent extends React.Component {
                     <div className="title-holder has-text-centered pb-5">
                         <p className="heading is-size-2 mb-5">
                             <b>
-                                <FormattedMessage 
-                                    id="translations.head.title" 
-                                    defaultMessage="Залишки вакцин для проведення профілактичних щеплень відповідно до Національного календаря"
-                                />
+                                {this.props.reportType === 'Routine' ?
+                                    <FormattedMessage 
+                                        id="translations.head.title" 
+                                        defaultMessage="Залишки вакцин для проведення профілактичних щеплень відповідно до Національного календаря"
+                                    />
+                                    :
+                                    <FormattedMessage 
+                                        id="translations.head.title.covid" 
+                                        defaultMessage="Залишки вакцин для проведення щеплень від COVID-19"
+                                    />
+                                }
                             </b>
                         </p>
                         <p className="title is-size-3">

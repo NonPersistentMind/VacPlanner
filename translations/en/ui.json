@@ -60,6 +60,11 @@
     "direct-translation.ХІБ": "Hib",
     "direct-translation.Пента": "DTwP-HBV-Hib",
     "direct-translation.Сказ": "Rabies",
+    "direct-translation.Pfizer": "Pfizer",
+    "direct-translation.Pfizer (дитячий)": "Pfizer (child)",
+    "direct-translation.Pfizer (дитяча)": "Pfizer (child)",
+    "direct-translation.Немає вакцини": "No vaccine",
+    "direct-translation.Не вистачає даних": "Not enough data",
     
     "direct-translation.TOP": "Top",
     "direct-translation.FACILITIES": "facilities",
@@ -82,6 +87,7 @@
     
 
     "translations.head.title": "Vaccine Stock for Routine Immunization According to the National Calendar",
+    "translations.head.title.covid": "Vaccine Stock for COVID-19 Immunization",
     "translations.head.report-date": "Reported on",
 
     "menu.regional-info": "Regional Information",

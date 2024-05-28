@@ -848,3 +848,12 @@ opacity: 1;
 .is-bold {
     font-weight: bold;
 }
+
+.height-capped {
+    max-height: 25vh;
+    overflow-y: auto;
+}
+
+.height-capped::-webkit-scrollbar {
+    display: none;
+}

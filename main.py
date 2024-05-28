@@ -22,7 +22,7 @@ from src import (
 )
 
 if __name__ == '__main__':    
-    df, REPORT_DATE, timed_outs, national_leftovers = get_data()
+    df, REPORT_DATE, timed_outs, national_leftovers = get_data(refresh=True)
     
     debug(df["Регіон"].unique())
     
@@ -92,6 +92,7 @@ if __name__ == '__main__':
         expiration_timelines,
         usage_based_expiration_timelines,
         no_future_supplies_usage_based_expiration_timelines_for_ukraine,
+        # report_type='Covid-19', # Leave nothing if routine vaccination
     )
     
     # Call webpack to bundle the frontend

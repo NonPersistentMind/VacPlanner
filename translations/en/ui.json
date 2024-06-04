@@ -112,6 +112,7 @@
     "regional.toolbox.data-save.selected-fundsources": "Selected Funding Sources",
     "foundsource.filterNames.Джерело фінансування": "Funding Source",
     "foundsource.державний": "State",
+    "foundsource.місцевий": "Local",
     "foundsource.бюджет": "budget",
     "foundsource.гуманітарна": "Humanitarian",
     "foundsource.допомога": "aid",
@@ -125,6 +126,7 @@
     "institutional.chart-section.chart-title":"Stock in Health Care Facilities",
     "institutional.chart-section.series-name":"Overall Stock",
     "institutional.chart-section.search-bar.looking-for-something": "Searching for something?",
+    "institutional.chart-section.search-bar.remove-stock": "Remove national stock?",
 
     "institutional.text-section.title.distribution-statistics": "Regional vaccines distribution statistics by health care facilities in",
     "institutional.text-section.title.reporting-facilities-amount": "Facilities Reporting",

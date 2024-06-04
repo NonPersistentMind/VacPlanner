@@ -166,6 +166,7 @@ def _clean_data(df: pd.DataFrame) -> None:
         'Невідоме джерело')
     df['Джерело фінансування'] = df['Джерело фінансування'].replace(
         ['Держбюджет', 'Державний бюджет'], 'Державний бюджет (невідомий рік)')
+    df['Джерело фінансування'] = df['Джерело фінансування'].replace('120', 'Гуманітарна допомога')
     # ————————————————————————————————————————————————————— Temporary Middleware Section —————————————————————————————————————————————————————
 
     _inverse_correction(df, 'Міжнародна непатентована назва',
@@ -214,8 +215,7 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
     Path.mkdir(MEDDATA_FOLDER, exist_ok=True,)
 
     # Update if the main dataset was downloaded more than 1 week ago
-    # if refresh or \
-    if refresh or \
+    if False or \
         not Path.exists(FACILITIES_STOCK_FILE) or \
         (dt.datetime.now() - dt.datetime.fromtimestamp(Path(FACILITIES_STOCK_FILE).stat().st_mtime)).days >= 7:
 
@@ -227,7 +227,9 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
             message = f'{region}. '
             try:
                 rp = rq.get(f'https://vaccine.meddata.com.ua/index.php?\
-                    option=com_fabrik&task=meddata.safemed&method=getList&format=raw&region={region}')
+                    option=com_fabrik&task=meddata.safemed&method=getList&format=raw&\
+                        region={region}&\
+                        from_date={dt.datetime.now().date() - dt.timedelta(days=200)}')
                 df = pd.concat(
                     [df, pd.DataFrame(rp.json()['data'])], ignore_index=True, axis=0)
                 log(message + 'Successfully processed.')
@@ -253,7 +255,7 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
         columns={
             'zaklad': 'name',
             'vaccine_name': 'trade_name',
-            'updated': 'accounting_date',
+            'supply_date': 'accounting_date',
             'defrosting_date': 'expire_date_defrosting',
         },
         inplace=True)
@@ -268,6 +270,9 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
         regional_stock['expire_date_defrosting'])
     regional_stock['region_order'] = regional_stock['name'].str.extract(
         r'(?i)(\w+-?\w+(?:с|ц|з)ький)')[0].str.replace('(?i)ий$', 'а', regex=True).str.title()
+    debug(f"N/A values in 'accounting_date' column: {regional_stock['accounting_date'].isna().sum()}")
+    regional_stock['accounting_date'] = regional_stock['accounting_date'].fillna(dt.datetime.now())
+    regional_stock['expire_date_defrosting'] = regional_stock['accounting_date'] + dt.timedelta(days=7*10)
     # –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
     # –––––––––––––––––––––––––––––––––––––––––––––––– Data processing begins –––––––––––––––––––––––––––––––––––––––––––––––
@@ -275,12 +280,19 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
 
     df['region_order'] = df['region_order'].str.title()
     df['edrpou'] = df['edrpou'].astype(str)
-    df['accounting_date'] = pd.to_datetime(df['accounting_date'])
-    df['expire_date'] = pd.to_datetime(df['expire_date'])
-    df['expire_date_defrosting'] = pd.to_datetime(df['expire_date_defrosting'])
-
+    df['accounting_date'] = pd.to_datetime(df['accounting_date'], errors='coerce')
+    df['expire_date'] = pd.to_datetime(df['expire_date'], errors='coerce')
+    df['expire_date_defrosting'] = pd.to_datetime(df['expire_date_defrosting'], errors='coerce')
+    
     # Potential loss of data
+    debug(f"Removing NaN values from 'expire_date' and 'expire_date_defrosting' columns. Current shape: {df.shape}")
+    df = df.dropna(subset=['expire_date', 'expire_date_defrosting'], how='all')
+    debug(f"Shape after removing NaN values: {df.shape}")
+    
+    # Potential loss of data
+    debug(f"Removing NaN values from 'accounting_date' column. Current shape: {df.shape}")
     df.dropna(subset=['accounting_date'], inplace=True)
+    debug(f"Shape after removing NaN values: {df.shape}")
 
     # Add regional stock data to facility-level data
     df = pd.concat([df, regional_stock], ignore_index=True, axis=0)
@@ -405,7 +417,7 @@ def get_data(
     savepath = DATA_FOLDER / 'Historical Data' / \
         f'{filedate["year"]}-{filedate["month"]}-{filedate["day"]}.pkl'
     if refresh or not Path.exists(savepath):
-        df = _get_meddata() if FROM_MEDDATA else \
+        df = _get_meddata(refresh=refresh) if FROM_MEDDATA else \
             pd.read_csv(filepath) if URL else \
             pd.read_excel(
             filepath,
@@ -441,9 +453,7 @@ def get_data(
 
 
 def _get_national_stock_meddata() -> pd.DataFrame:
-    rp = rq.get('https://vaccine.meddata.com.ua/index.php?\
-    option=com_fabrik&task=meddata.safemed&\
-        method=vaccines_national&format=raw')
+    rp = rq.get('https://vaccine.meddata.com.ua/index.php?option=com_fabrik&task=meddata.safemed&method=vaccines_national&format=raw')
     nat_stock = pd.DataFrame(rp.json()['data'])
     nat_stock.rename(columns={
         'vaccine_name': 'Вакцина',

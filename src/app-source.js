@@ -29,6 +29,7 @@ import HeadSectionComponent from './js/VaccineStock/HeadSection/Head.js';
 import RegionalStockChartComponent from './js/VaccineStock/RegionalSection/RegionalStockChart';
 import NationalStockChartComponent from './js/VaccineStock/RegionalSection/NationalStockChart';
 import DropdownComponent from './js/VaccineStock/RegionalSection/DropdownBlock/DropdownComponent';
+import SwitchStockComponent from './js/VaccineStock/InstitutionalSection/SwitchStockComponent';
 
 const REPORT_TYPE = '/*{}*/';
 const REPORT_DATE = new Date("/*{}*/");
@@ -771,6 +772,8 @@ class InstitutionalChartSectionComponent extends React.Component {
 
     state = {
         vaccinePicked: null,
+        searchValue: null,
+        includeNationalStock: true,
     }
 
     exportToExcel = () => {
@@ -786,31 +789,11 @@ class InstitutionalChartSectionComponent extends React.Component {
     }
 
     handleSearch = (value) => {
-        let dataFound = this.props.data.filter(el => el.Rgn.toLowerCase().includes(value.toLowerCase()));
-        if (dataFound.length > 0) {
-            this.chart.setOption({
-                series: {
-                    data: this.props.createTreeFromData(dataFound)
-                }
-            });
-        }
-        else {
-            dataFound = this.props.data.filter(el => el.Fclt.toLowerCase().includes(value.toLowerCase()));
-            if (dataFound.length > 0) {
-                this.chart.setOption({
-                    series: {
-                        data: this.props.createTreeFromData(dataFound)
-                    }
-                });
-            }
-            else {
-                this.chart.setOption({
-                    series: {
-                        data: this.props.createTreeFromData(this.props.data)
-                    }
-                });
-            }
-        }
+        this.setState({searchValue:value});
+    }
+
+    handleStockSwitch = (event) => {
+        this.setState({includeNationalStock: !event.target.checked});
     }
 
     render() {
@@ -853,8 +836,11 @@ class InstitutionalChartSectionComponent extends React.Component {
                     <SearchBarComponent     
                         handleSearch={this.handleSearch}
                     />
+                    <SwitchStockComponent
+                        onChange={this.handleStockSwitch}
+                    />
 
-                    <article className="message search-result">
+                    {/* <article className="message search-result">
                         <div className="message-header is-justify-content-center">
                             <p>Знайшлося! (або ні, ми ще не знаємо)</p>
                         </div>
@@ -867,7 +853,7 @@ class InstitutionalChartSectionComponent extends React.Component {
                             <br/>
                             <p>Бережіть себе, чудових свят!</p>
                         </div>
-                    </article>
+                    </article> */}
                 </div>
             </section>
         );
@@ -1081,8 +1067,8 @@ class InstitutionalChartSectionComponent extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        const intl = this.context;
         if(prevProps.language != this.props.language) {
-            const intl = this.context;
             const tree = this.props.createTreeFromData(this.props.data);
             this.chart.setOption({
                 title: {
@@ -1235,6 +1221,41 @@ class InstitutionalChartSectionComponent extends React.Component {
                     prev_element = undefined;
                 }
             });
+        }
+        if ((prevState.searchValue != this.state.searchValue) || (prevState.includeNationalStock != this.state.includeNationalStock)){
+            let value = this.state.searchValue;
+            let dataFound = this.props.data
+            if (value !== null && value !== ''){
+                dataFound = dataFound.filter(el => el.Rgn.toLowerCase().includes(value.toLowerCase()));
+            }
+            if (!this.state.includeNationalStock){
+                dataFound = dataFound.filter(el => el.Rgn !== intl.formatMessage({id:"direct-translation.НацСклади", defaultMessage:"НацСклади"}));
+            }
+
+            if (dataFound.length > 0) {
+                this.chart.setOption({
+                    series: {
+                        data: this.props.createTreeFromData(dataFound)
+                    }
+                });
+            }
+            else {
+                dataFound = this.props.data.filter(el => el.Fclt.toLowerCase().includes(value.toLowerCase()));
+                if (dataFound.length > 0) {
+                    this.chart.setOption({
+                        series: {
+                            data: this.props.createTreeFromData(dataFound)
+                        }
+                    });
+                }
+                else {
+                    this.chart.setOption({
+                        series: {
+                            data: this.props.createTreeFromData(this.props.data)
+                        }
+                    });
+                }
+            }
         }
     }
 }

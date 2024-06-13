@@ -216,6 +216,11 @@ section {
     background: radial-gradient(circle, rgba(65,44,59,1) 0%, rgb(22 23 34) 100%);
 }
 
+#institutional-section .gradient-background.no-clutch {
+    --bottom: none;
+    margin-top: 0;
+}
+
 /*
 #section-3 .chart {
     -moz-backdrop-filter: brightness(90%) blur(40px);

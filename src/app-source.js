@@ -117,334 +117,6 @@ class RegionalChartSectionComponent extends React.Component {
             </section>
         )
     }
-
-    // componentDidMount() {
-    //     let regionalChartHolder = document.getElementById('section-1-chart');
-    //     this.chart = echarts.init(regionalChartHolder);
-    //     let intl = this.context;
-    //     let chart = this.chart;
-
-    //     let option = Object.assign({}, globalOption);
-    //     Object.assign(option, {
-    //         darkMode: true,
-    //         // backgroundColor:'rgba(30, 31, 43, 0.7)',
-    //         color: vaccineColors.map(el => new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-    //         {
-    //             offset: 0,
-    //             color: el+'bb'
-    //         }, 
-    //         {
-    //             offset: 0.5,
-    //             color: el
-    //         }, 
-    //         {
-    //             offset: 1,
-    //             color: el+'bb'
-    //         }])),
-
-    //         title: {
-    //             left: '15px',
-    //             top: '20px',
-    //             textStyle: {
-    //                 // fontFamily: 'Georgia',
-    //                 fontSize: "1.4rem",
-    //                 color: '#ccc'
-    //             },
-    //         },
-
-    //         dataZoom: [
-    //             {
-    //                 type: 'slider',
-    //                 yAxisIndex: [0],
-    //                 filterMode: 'empty',
-    //                 left: 20,
-    //                 width: 35,
-
-    //                 textStyle: {
-    //                     color: 'rgb(255 255 255 / 75%)'
-    //                 },
-
-    //                 borderRadius: 10,
-    //                 borderColor: 'white',
-    //                 fillerColor: 'rgb(189 208 218 / 75%)',
-
-    //                 handleStyle: {
-    //                     borderColor: 'white',
-    //                 },
-
-    //                 moveHandleSize: 8,
-    //                 moveHandleStyle: {
-    //                     color: 'rgb(189 208 218 / 75%)',
-    //                     borderColor: 'white',
-    //                 },
-
-    //                 emphasis: {
-    //                     moveHandleStyle: {
-    //                         color: 'rgb(109 205 255 / 100%)',
-    //                         borderColor: 'white',
-    //                     },
-    //                 }
-    //             }
-    //         ],
-
-    //         xAxis: {
-    //             type: 'category',
-    //             // data: this.state.regions.map(el => el == 'Україна' ? "НацЗалишки" : el),
-    //             axisLabel: {
-    //                 interval: 0,
-    //                 rotate: 55,
-    //                 textStyle: {
-    //                     fontFamily: globalOption.textStyle.fontFamily,
-    //                     fontSize: "12px",
-    //                 }
-    //             }
-    //         },
-
-    //         yAxis: {
-    //             type: 'value',
-    //             splitLine: {
-    //                 lineStyle: {
-    //                     type: 'dashed',
-    //                     color: "rgba(255, 255, 255, 0.2)"
-    //                 }
-    //             },
-    //             axisLabel: {
-    //                 textStyle: {
-    //                     fontFamily: globalOption.textStyle.fontFamily,
-    //                     fontSize: "12px",
-    //                 }
-    //             }
-    //         },
-
-    //         textStyle: {
-    //             // fontFamily: 'Georgia',
-    //             color: '#ccc'
-    //         },
-
-    //         tooltip: {
-    //             trigger: 'item',
-    //             backgroundColor: "rgba(27, 27, 38, 0.933)",
-    //             textStyle: {
-    //                 fontFamily: (globalOption.tooltip && globalOption.tooltip.textStyle.fontFamily) || globalOption.textStyle.fontFamily,
-    //                 color: '#ccc',
-    //                 fontSize: 14
-    //             },
-    //             axisPointer: {
-    //                 type: 'shadow'
-    //             }
-    //         },
-
-    //         grid: {
-    //             left: '150px',
-    //             right: '30px',
-    //             top: '100px',
-    //             bottom: '110px'
-    //         },
-
-    //     });
-
-
-    //     let lastClickTime = 0;
-    //     let clickTimeout = null;
-
-    //     this.chart.on('legendselectchanged', function (params) {
-    //         const currentTime = new Date().getTime();
-    //         const timeDiff = currentTime - lastClickTime;
-        
-    //         if (timeDiff < 300) { // If time difference is less than 300ms, consider it as a double click
-    //             if (clickTimeout) clearTimeout(clickTimeout); // Clear the previous timeout
-        
-    //             Object.keys(params.selected).forEach(name => {
-    //                 if (params.selected[name]) {
-    //                     chart.dispatchAction({
-    //                         type: 'legendUnSelect',
-    //                         name: name
-    //                     });
-    //                 }
-    //             });
-
-    //             chart.dispatchAction({
-    //                 type: 'legendSelect',
-    //                 name: params.name
-    //             });
-
-
-    //             // chart.setOption({});
-        
-    //         } else { // If it's not a double click, start a timeout
-    //             clickTimeout = setTimeout(function() {
-    //                 // Add your single click functionality here
-    //             }, 150);
-    //         }
-        
-    //         lastClickTime = currentTime;
-    //     });
-
-    //     this.chart.setOption(option);
-    //     this.props.addNewChart(this.chart);
-    // }
-
-    // componentDidUpdate() {
-    //     const chart = this.chart;
-    //     const intl = this.context;
-    //     const nationalStock = intl.formatMessage({id:"direct-translation.НацСклади", defaultMessage:"НацСклади"});
-        
-    //     let selectedFundSources = this.state.selectedFilters['Джерело фінансування'];
-    //     selectedFundSources = Object.keys(selectedFundSources).filter(el => selectedFundSources[el]);
-        
-    //     // data is a dictionary of the form { 'Регіон': .., 'Джерело фінансування': .., 'Міжнародна непатентована назва': .. , 'Кількість': .. }
-    //     let data = this.state.data['Регіон'].reduce((acc, item, i) => {
-    //         // Filter out all the data that does not correspond to the selected found sources 
-    //         if (selectedFundSources.includes(this.state.data['Джерело фінансування'][i])) {
-    //             let vaccine = this.state.data['Міжнародна непатентована назва'][i];
-    //             vaccine = intl.formatMessage({id:`direct-translation.${vaccine}`, defaultMessage:vaccine});
-    //             if (!acc[item]) {
-    //                 acc[item] = {
-    //                     [vaccine]: this.state.data['Кількість доз'][i]
-    //                 };
-    //             }
-    //             else {
-    //                 if (acc[item][vaccine]) {
-    //                     acc[item][vaccine] += this.state.data['Кількість доз'][i]
-    //                 }
-    //                 else {
-    //                     acc[item][vaccine] = this.state.data['Кількість доз'][i]
-    //                 }
-    //             }
-    //         }
-    //         return acc;
-    //     }, {});
-
-    //     let vaccines_raw = Object.keys(data).reduce((acc, region) => {
-    //         return new Set([...acc, ...Object.keys(data[region])]);
-    //     }, new Set());
-    //     vaccines_raw = Array.from(vaccines_raw);
-    //     let vaccines = vaccines_raw.map(el => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
-
-    //     let regions_raw = Object.keys(data).sort((a, b) => regionPositions[a] - regionPositions[b]);
-    //     let regions = regions_raw.map(el => el == 'Україна' ? nationalStock : intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el}));
-
-    //     let series = [];
-    //     for (let el of vaccines) {
-    //         series.push({
-    //             name: el,
-    //             type: 'bar',
-    //             stack: 'total',
-    //             barWidth: '70%',
-    //             label: {
-    //                 show: true,
-    //                 textStyle:{
-    //                     fontFamily: 'Georgia',
-    //                     color: 'hsl(0, 0%, 4%)'
-    //                 }
-    //             },
-    //             itemStyle: {
-    //                 borderRadius: 4,
-    //                 // borderColor: '#fff',
-    //                 borderWidth: 2
-    //             },
-    //             emphasis: {
-    //                 focus: 'series'
-    //             },
-    //             data: Object.values(data).map(regionalVaccines => regionalVaccines[el] || 0)
-    //         });
-    //     }
-
-    //     let showLegend = true;
-    //     const title = intl.formatMessage({id:"regional.chart.title", defaultMessage:"Залишки вакцин"});
-
-    //     this.chart.setOption({
-    //         title: {
-    //             text: title,
-    //         },
-    //         legend: {
-    //             type: 'plain',
-    //             left: "center",
-    //             top: "55px",
-    //             selectedMode: 'multiple',
-    //             selected: vaccines.reduce((acc, item) => {
-    //                 acc[item] = true;
-    //                 return acc;
-    //             }, {}),
-    //             textStyle: {
-    //                 fontSize: "15px",
-    //                 color: '#ccc'
-    //             }
-    //         },
-    //         xAxis: {
-    //             type: 'category',
-    //             data: regions,
-    //             axisLabel: {
-    //                 interval: 0,
-    //                 rotate: 55,
-    //                 textStyle: {
-    //                     fontFamily: globalOption.textStyle.fontFamily,
-    //                     fontSize: "12px",
-    //                 }
-    //             }
-    //         },
-    //         series,
-
-    //         toolbox: {
-    //             show: true,
-    //             top: 15,
-    //             right: 25,
-    //             feature: {
-    //                 saveAsImage: {
-    //                     show: true,
-    //                     backgroundColor: 'auto'
-    //                 },
-    //                 myRestore: {
-    //                     show: true,
-    //                     title: intl.formatMessage({id:'direct-translation.RESTORE', defaultMessage:'Відновити'}),
-    //                     // An icon that looks like we are restoring the chart
-    //                     icon: "path://M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2",
-    //                     onclick: function () {
-    //                         chart.setOption({
-    //                             legend: {
-    //                                 selected: vaccines.reduce((acc, item) => {
-    //                                     acc[item] = true;
-    //                                     return acc;
-    //                                 }, {}),
-    //                             }
-    //                         });
-    //                     }
-    //                 },
-    //                 myToggleLegend: {
-    //                     show: true,
-    //                     title: intl.formatMessage({id:'direct-translation.SHOW-HIDE-LEGEND', defaultMessage:'Показати/приховати легенду'}),
-    //                     icon: 'path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891',
-    //                     onclick: function () {
-    //                         showLegend = (showLegend) ? false : true;
-    //                         chart.setOption({
-    //                             legend: { show: showLegend }
-    //                         })
-    //                     }
-    //                 },
-    //                 mySaveData: {
-    //                     show: true,
-    //                     title: intl.formatMessage({id:'direct-translation.EXPORT-TO-EXCEL', defaultMessage:'Експортувати в Excel'}),
-    //                     icon: 'path://M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM11 12C10.4477 12 10 12.4477 10 13V17V21C10 21.5523 10.4477 22 11 22H15H21C21.5523 22 22 21.5523 22 21V17V13C22 12.4477 21.5523 12 21 12H15H11ZM12 16V14H14V16H12ZM16 16V14H20V16H16ZM16 20V18H20V20H16ZM14 18V20H12V18H14Z',
-    //                     onclick: function () {
-    //                         console.log(selectedFundSources);
-    //                         let fundSources = selectedFundSources.map(value => value.replaceAll(/[\u0400-\u04FF]+/gi, word => intl.formatMessage({id: `foundsource.${word.toLowerCase()}`, defaultMessage: word})));
-    //                         console.log(fundSources);
-    //                         fundSources = fundSources.join(', ');
-
-    //                         const aoa = [[intl.formatMessage({id:'regional.toolbox.data-save.selected-fundsources', defaultMessage:'Обрані джерела фінансування'})+':', fundSources],[]];
-    //                         aoa.push([''].concat(regions));
-    //                         for (let vacName of vaccines_raw) {
-    //                             aoa.push(
-    //                                 [vacName].concat( regions_raw.map(reg => data[reg][vacName] || 0) ) 
-    //                             );
-    //                         }
-    //                         exportToXLSX(aoa, title+'.xlsx');
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }, {replaceMerge: ['series', 'toolbox']});
-    // }
 }
 
 class RegionalTextSectionComponent extends React.Component {
@@ -465,7 +137,7 @@ class RegionalTextSectionComponent extends React.Component {
                 let vaccineEndsIndex = regionalData.data[i].findIndex(el => el == 0);
                 let vaccineEndsDate = new Date(regionalData.index[vaccineEndsIndex]);
                 let coverageInMonth = monthInterval(REPORT_DATE, vaccineEndsDate);
-                return coverageInMonth < 3;
+                return coverageInMonth < (REPORT_TYPE === "Routine" ? 3 : 0.5);
             });
             if (insufficientVaccines) {
                 return {
@@ -623,6 +295,7 @@ class RegionalTextSectionComponent extends React.Component {
                     </div>
                 </nav>
                 <nav className="level is-justify-content-center has-text-light is-mobile mb-5 pb-5">
+                    {REPORT_TYPE === 'Routine' ? (
                     <div className="level-item has-text-centered">
                         <div className="height-capped">
                             <p className="title is-5 has-text-light mb-3 is-clickable" onClick={this.exportTimedOutReports}><FormattedMessage id="regional.text.late-reported-leftovers" defaultMessage="Залишки, прозвітовані більше, ніж 7 днів тому"/></p>
@@ -636,12 +309,16 @@ class RegionalTextSectionComponent extends React.Component {
                                 })
                             }
                         </div>
-                    </div>
+                    </div>) : null}
                     <div className="level-item full-width">
                         <div className="columns is-multiline is-centered">
                             <div className="column is-full has-text-centered">
                                 <p className="title is-4 has-text-light is-clickable" onClick={this.exportScarceVaccines}>
-                                    <FormattedMessage id="regional.text.scarce-vaccines" defaultMessage="Дефіцитні вакцини"/>:
+                                    <FormattedMessage 
+                                        id="regional.text.scarce-vaccines" 
+                                        defaultMessage="Дефіцитні вакцини (<{scarceMonths} місяців покриття)" 
+                                        values={{scarceMonths: REPORT_TYPE === "Routine" ? 3 : 0.5}}
+                                    />:
                                 </p>
                             </div>
                             {
@@ -727,7 +404,7 @@ class InstitutionalComponent extends React.Component {
         return this.state.data ? (
             <div id="institutional-section">
                 {/*<img src="https://i.ibb.co/7z2FPgV/112768-red-and-black-blurred-background-vector-2.jpg" alt=""/>*/}
-                <div className="gradient-background"></div>
+                <div className={"gradient-background" + (REPORT_TYPE!=="Routine" ? " no-clutch" : "")}></div>
 
                 <InstitutionalChartSectionComponent 
                     data={this.state.data} 
@@ -1831,6 +1508,7 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
 
     componentDidUpdate() {
         const intl = this.context;
+        const stockMessageTitle = intl.formatMessage({id:"leftovers.chart.tooltip.title", defaultMessage:'Залишки станом на'});
 
         let data = this.props.data[this.props.selectedRegion];
         this.reference.data = data;
@@ -1852,7 +1530,7 @@ class LeftoversUsageExpirationChartSectionComponent extends React.Component {
                 formatter: (params) => {
                     let date = new Date(params[0].data[0]);
                     let dateStr = date.toLocaleDateString("uk-UA");
-                    let tooltip = `<b>${dateStr}</b><br/>`;
+                    let tooltip = `<p>${stockMessageTitle}</p><b>${dateStr}:</b><br/>`;
                     params.forEach((el, index) => {
                         tooltip += `<div class="is-flex is-justify-content-space-between mt-1">
                             <span class="mr-3">
@@ -2356,8 +2034,8 @@ class VaccineCoverageChartComponent extends React.Component {
     barOption = {
         visualMap: {
             type: 'continuous',
-            min: 1,
-            max: 7,
+            min: REPORT_TYPE === "Routine" ? 1 : 0,
+            max: REPORT_TYPE === "Routine" ? 7 : 1.5,
             dimension: 0,
             inRange: {
                 color: [
@@ -2366,7 +2044,7 @@ class VaccineCoverageChartComponent extends React.Component {
                     '#c8ffb2',
                 ]
             },
-            text: ['≥10', '≈0'],
+            text: REPORT_TYPE === "Routine" ? ['≥10', '≈0'] : ['≥2', '≈0'],
             orient: 'vertical',
             right: 0,
             top: 'center',
@@ -2466,8 +2144,8 @@ class VaccineCoverageChartComponent extends React.Component {
         
         visualMap: {
             type: 'continuous',
-            min: 1,
-            max: 7,
+            min: REPORT_TYPE === "Routine" ? 1 : 0,
+            max: REPORT_TYPE === "Routine" ? 7 : 1.5,
             dimension: 0,
             calculable: true,
             inRange: {
@@ -2485,7 +2163,7 @@ class VaccineCoverageChartComponent extends React.Component {
                     '#aae0a9',
                 ]
             },
-            text: ['≥7', '≈0'],
+            text: REPORT_TYPE === "Routine" ? ['≥7', '≈0'] : ['≥2', '≈0'],
             orient: 'vertical',
             left: 10,
             bottom: 10,
@@ -2598,7 +2276,7 @@ class VaccineCoverageChartComponent extends React.Component {
                     markLine: {
                         data: [{
                             name: "Критична позначка",
-                            xAxis: 3,
+                            xAxis: REPORT_TYPE === "Routine" ? 3 : 0.5,
                         }],
                         lineStyle: {
                             color: '#f7797c',
@@ -3362,13 +3040,16 @@ class UsageBarChartComponent extends React.Component {
 
         this.chart.setOption({
             title: {
-                text: intl.formatMessage({id: "leftovers.infographics.no-usage.usageBarChart.title", defaultMessage:"Споживання вакцин"}),
+                text: intl.formatMessage({id: "leftovers.infographics.no-usage.usageBarChart.title", defaultMessage:"Споживання вакцин (використання + розлив)"}),
             },
             xAxis: {
                 data: (Object.keys(usage).map((date)=>{
                     return intl.formatMessage({id: `direct-translation.${monthMapping[Number(date.slice(5,7))]}`, defaultMessage:monthMapping[Number(date.slice(5,7))]}) + ' ' + date.slice(0, 4);
                 
-                })).concat(intl.formatMessage({id: "leftovers.infographics.no-usage.usageBarChart.averaged-usage-bar", defaultMessage:"Усереднене\n(12 міс)"})),
+                })).concat(intl.formatMessage({
+                    id: "leftovers.infographics.no-usage.usageBarChart.averaged-usage-bar", 
+                    defaultMessage:"Усереднене\n({n_months} міс)"
+                }, {n_months: REPORT_TYPE === "Routine" ? 12 : 6})),
             },
             legend: {
                 formatter: (el) => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})
@@ -3626,21 +3307,36 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
                 <p className="title is-6 has-text-centered has-text-white my-2"><FormattedMessage id="leftovers.infographics.required-supply.title" defaultMessage="Необхідний обсяг поставок вакцини (доз) для забезпечення потреб регіону на:"/></p>
                 <div className="columns">
                     <div className={this.state.active == 3 ? "column active" : "column"} onClick={() => this.changeActiveChart(3)}>
-                        <p className="title has-text-white"><FormattedMessage id="leftovers.infographics.required-supply.three-month" defaultMessage="Три місяці"/></p>
+                        <p className="title has-text-white">
+                            {REPORT_TYPE === "Routine" ? 
+                                <FormattedMessage id="leftovers.infographics.required-supply.three-months" defaultMessage="Три місяці"/>
+                                : <FormattedMessage id="leftovers.infographics.required-supply.one-month" defaultMessage="Один місяць"/>
+                            }
+                        </p>
                         <ChartComponent
                             id="three-month-required-supply-chart"
                             onChartInitialized={this.threeMonthInitializer}
                         />
                     </div>
                     <div className={this.state.active == 6 ? "column active" : "column"} onClick={() => this.changeActiveChart(6)}>
-                        <p className="title has-text-white"><FormattedMessage id="leftovers.infographics.required-supply.six-month" defaultMessage="Шість місяців"/></p>
+                        <p className="title has-text-white">
+                            {REPORT_TYPE === "Routine" ? 
+                                <FormattedMessage id="leftovers.infographics.required-supply.six-months" defaultMessage="Шість місяців"/>
+                                : <FormattedMessage id="leftovers.infographics.required-supply.two-months" defaultMessage="Два місяці"/>
+                            }
+                        </p>
                         <ChartComponent
                             id="six-month-required-supply-chart"
                             onChartInitialized={this.sixMonthInitializer}
                         />
                     </div>
                     <div className={this.state.active == 12 ? "column active" : "column"} onClick={() => this.changeActiveChart(12)}>
-                        <p className="title has-text-white"><FormattedMessage id="leftovers.infographics.required-supply.year" defaultMessage="Рік"/></p>
+                        <p className="title has-text-white">
+                            {REPORT_TYPE === "Routine" ? 
+                                <FormattedMessage id="leftovers.infographics.required-supply.year" defaultMessage="Рік"/>
+                                : <FormattedMessage id="leftovers.infographics.required-supply.three-months" defaultMessage="Три місяці"/>
+                            }
+                        </p>
                         <ChartComponent
                             id="twelve-month-required-supply-chart"
                             onChartInitialized={this.twelveMonthInitializer}
@@ -3668,11 +3364,15 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
         const usage = this.props.averageUsage[this.props.selectedRegion];
         let data = this.props.data[this.props.selectedRegion];
 
-        const phrases = {
+        const phrases = REPORT_TYPE === "Routine" ? {
             3: intl.formatMessage({id:`leftovers.infographics.required-supply.three-month-supplied`, defaultMessage:"Достатня забезпеченість\nдля покриття потреби\nна найближчі 3 місяці"}),
             6: intl.formatMessage({id:`leftovers.infographics.required-supply.six-month-supplied`, defaultMessage:"Забезпеченість достатня і для\nпокриття потреби на 6 місяців"}),
             12: intl.formatMessage({id:`leftovers.infographics.required-supply.year-supplied`, defaultMessage:"Проведений аналіз показує,\nщо потреба регіону покрита на рік"})
-        };
+        } : {
+            3: intl.formatMessage({id:`leftovers.infographics.required-supply.one-month-supplied`, defaultMessage:"Вакцини достатньо, аби покрити\nпотреби регіону на 1 місяць"}),
+            6: intl.formatMessage({id:`leftovers.infographics.required-supply.two-month-supplied`, defaultMessage:"Забезпеченість достатня і для\nпокриття потреби на 2 місяці"}), 
+            12: intl.formatMessage({id:`leftovers.infographics.required-supply.three-month-supplied`, defaultMessage:"Достатня забезпеченість\nдля покриття потреби\nна найближчі 3 місяці"})
+        }
 
         region == 'Україна' && (data = this.props.noFutureSuppliesForecast['Україна'])
         const coverage = data.columns.reduce((acc, item, i) => {
@@ -3685,8 +3385,22 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
         }, {});
 
         Object.keys(this.charts).map(months => {
+            let coverageMonths = months;
+            if (REPORT_TYPE !== "Routine"){
+                switch (months) {
+                    case '3': // 3 months for routine vaccination, 1 month for covid ones
+                        coverageMonths = 1;
+                        break;
+                    case '6': // 6 months for routine vaccination, 2 months for covid ones
+                        coverageMonths = 2;
+                        break;
+                    case '12': // 12 months for routine vaccination, 3 months for covid ones
+                        coverageMonths = 3;
+                        break;
+                }
+            }
             let requiredSupply = Object.keys(coverage).reduce((acc, item) => {
-                let insufficiency = months - coverage[item];
+                let insufficiency = coverageMonths - coverage[item];
                 let supply = insufficiency > 0 ? Math.round(insufficiency*usage[item]) : 0;
                 if (supply > 0) {
                     acc[item] = supply;
@@ -3859,7 +3573,7 @@ class App extends React.Component {
                             <MenuComponent />
                             <HeadSectionComponent setLanguage={setLanguage} reportDate={REPORT_DATE} reportType={REPORT_TYPE}/>
                             <RegionalChartSectionComponent vaccineColors={this.state.vaccineColors} addNewChart={this.addNewChart} language={language}/>
-                            <RegionalTextSectionComponent dataWithUsage={this.state.dataWithUsage} language={language}/>
+                            {REPORT_TYPE === "Routine" ? <RegionalTextSectionComponent dataWithUsage={this.state.dataWithUsage} language={language}/> : null}
                             <InstitutionalComponent addNewChart={this.addNewChart} language={language}/>
                             <LeftoversUsageExpirationComponent dataWithUsage={this.state.dataWithUsage} addNewChart={this.addNewChart} language={language}/>
                         </div>

@@ -239,6 +239,11 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
         # –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
     else:
         log('Picking existing MedData data.')
+    
+    # Get facilities that are located in Kyiv City
+    rp = rq.get('https://vaccine.meddata.com.ua/index.php?option=com_fabrik&task=meddata.safemed&method=get_edrpou_kyiv&format=raw')
+    kyiv_facilities = pd.DataFrame(rp.json()['data'])
+    kyiv_facilities['edrpou'] = kyiv_facilities['edrpou'].astype(str)
 
     # –––––––––––––––––––––––––––––––––––––––––––– Download regional stock data ––––––––––––––––––––––––––––––––––––––––––––
     rp = rq.get('https://vaccine.meddata.com.ua/index.php?\
@@ -277,12 +282,14 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
 
     # –––––––––––––––––––––––––––––––––––––––––––––––– Data processing begins –––––––––––––––––––––––––––––––––––––––––––––––
     df = pd.read_csv(FACILITIES_STOCK_FILE, sep=';')
-
+    
     df['region_order'] = df['region_order'].str.title()
     df['edrpou'] = df['edrpou'].astype(str)
     df['accounting_date'] = pd.to_datetime(df['accounting_date'], errors='coerce')
     df['expire_date'] = pd.to_datetime(df['expire_date'], errors='coerce')
     df['expire_date_defrosting'] = pd.to_datetime(df['expire_date_defrosting'], errors='coerce')
+    
+    df.loc[df['edrpou'].isin(kyiv_facilities['edrpou']), 'region_order'] = 'м. Київ'
     
     # Potential loss of data
     debug(f"Removing NaN values from 'expire_date' and 'expire_date_defrosting' columns. Current shape: {df.shape}")
@@ -309,13 +316,14 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
     # Replace long vaccine names with short ones
     df['trade_name'] = df['trade_name'].str.replace(r'(?i)\w*Comirnaty.*\(child\)\w*', 'Pfizer (дитячий)', regex=True)
     df['trade_name'] = df['trade_name'].str.replace(r'(?i).*(?:Comirnaty|Pfizer)(?! \(дитяч\w+\)).*', 'Pfizer', regex=True)
+    df.loc[df['series']=='HL8354', 'trade_name'] = 'Pfizer (дитячий)'
 
     # Compute the amount of consumed vaccines for the last "pure" 6 months
-    month_period = 6
+    month_period = 7
     now = dt.datetime.now()
     start_date = dt.datetime(
         now.year + (now.month - month_period) // 12,
-        (now.month - 6) % 12 + 1,
+        (now.month - month_period) % 12 + 1,
         1
     )
     end_date = dt.datetime(now.year, now.month, 1) - dt.timedelta(days=1)

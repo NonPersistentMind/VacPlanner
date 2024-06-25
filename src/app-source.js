@@ -3387,16 +3387,18 @@ class RequiredSupplyToCoverNeedsTripleChartComponent extends React.Component {
         Object.keys(this.charts).map(months => {
             let coverageMonths = months;
             if (REPORT_TYPE !== "Routine"){
-                switch (months) {
-                    case '3': // 3 months for routine vaccination, 1 month for covid ones
-                        coverageMonths = 1;
-                        break;
-                    case '6': // 6 months for routine vaccination, 2 months for covid ones
-                        coverageMonths = 2;
-                        break;
-                    case '12': // 12 months for routine vaccination, 3 months for covid ones
-                        coverageMonths = 3;
-                        break;
+                if (region !== 'Україна') {
+                    switch (months) {
+                        case '3': // 3 months for routine vaccination, 1 month for covid ones
+                            coverageMonths = 1;
+                            break;
+                        case '6': // 6 months for routine vaccination, 2 months for covid ones
+                            coverageMonths = 2;
+                            break;
+                        case '12': // 12 months for routine vaccination, 3 months for covid ones
+                            coverageMonths = 3;
+                            break;
+                    }
                 }
             }
             let requiredSupply = Object.keys(coverage).reduce((acc, item) => {

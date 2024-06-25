@@ -2,6 +2,8 @@ __pycache__
 .DS_Store
 node_modules/
 __pycache__/
+.venv/
+.gitignore
 
 Assets/
 Data/

@@ -174,7 +174,15 @@ def _clean_data(df: pd.DataFrame) -> None:
     _inverse_correction(df, 'Заклад', 'код ЄДРПОУ', new_label='Назва закладу')
 
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
+        {
+            '/Вакцина для профілактики сказу ': 'Сказ',
+            'Тетанус Гамма': 'Правець',
+        })
+    
+    df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
         vaccine_shorts)
+    assert set(df['Міжнародна непатентована назва'].unique()) <= set(vaccine_shorts.values()), f"Unknown vaccine names found: {set(df['Міжнародна непатентована назва'].unique())}"
+
     df = df[~df['Міжнародна непатентована назва'].isin(VACCINES_SKIPPED)]
 
     df['дата оновлення'] = pd.to_datetime(df['дата оновлення'], dayfirst=True)
@@ -215,7 +223,7 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
     Path.mkdir(MEDDATA_FOLDER, exist_ok=True,)
 
     # Update if the main dataset was downloaded more than 1 week ago
-    if False or \
+    if refresh or \
         not Path.exists(FACILITIES_STOCK_FILE) or \
         (dt.datetime.now() - dt.datetime.fromtimestamp(Path(FACILITIES_STOCK_FILE).stat().st_mtime)).days >= 7:
 

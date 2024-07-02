@@ -20,6 +20,7 @@ from src import (
     debug,
     log
 )
+from config import SPECIFIC_DATASOURCE
 
 if __name__ == '__main__':
     df, REPORT_DATE, timed_outs, national_leftovers = get_data(refresh=True)
@@ -92,7 +93,7 @@ if __name__ == '__main__':
         expiration_timelines,
         usage_based_expiration_timelines,
         no_future_supplies_usage_based_expiration_timelines_for_ukraine,
-        # report_type='Covid-19', # Leave nothing if routine vaccination
+        report_type='Covid-19' if SPECIFIC_DATASOURCE == "MedData" else "Routine", # Leave nothing if routine vaccination
     )
     
     # Call webpack to bundle the frontend

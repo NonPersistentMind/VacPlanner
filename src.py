@@ -146,7 +146,7 @@ def _clean_data(df: pd.DataFrame) -> None:
     df.columns = df.columns.str.strip()
     df.rename(columns={'Серія препарту': 'Серія препарату'}, inplace=True)
 
-    # ————————————————————————————————————————————————————— Temporary Middleware Section —————————————————————————————————————————————————————
+    # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
     df['Заклад'] = df['Заклад'].str.strip()
     df['Кількість доз'] = df['Кількість доз'].astype(int)
     df['Регіон'] = df['Регіон'].str.replace(' область', '')
@@ -167,21 +167,22 @@ def _clean_data(df: pd.DataFrame) -> None:
     df['Джерело фінансування'] = df['Джерело фінансування'].replace(
         ['Держбюджет', 'Державний бюджет'], 'Державний бюджет (невідомий рік)')
     df['Джерело фінансування'] = df['Джерело фінансування'].replace('120', 'Гуманітарна допомога')
-    # ————————————————————————————————————————————————————— Temporary Middleware Section —————————————————————————————————————————————————————
-
-    _inverse_correction(df, 'Міжнародна непатентована назва',
-                        'Серія препарату', new_label='Назва препарату')
-    _inverse_correction(df, 'Заклад', 'код ЄДРПОУ', new_label='Назва закладу')
-
+    
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
         {
             '/Вакцина для профілактики сказу ': 'Сказ',
             'Тетанус Гамма': 'Правець',
         })
+    # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
+
+    _inverse_correction(df, 'Міжнародна непатентована назва',
+                        'Серія препарату', new_label='Назва препарату')
+    _inverse_correction(df, 'Заклад', 'код ЄДРПОУ', new_label='Назва закладу')
     
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
         vaccine_shorts)
-    assert set(df['Міжнародна непатентована назва'].unique()) <= set(vaccine_shorts.values()), f"Unknown vaccine names found: {set(df['Міжнародна непатентована назва'].unique())}"
+    if SPECIFIC_DATASOURCE != 'MedData':
+        assert set(df['Міжнародна непатентована назва'].unique()) <= set(vaccine_shorts.values()), f"Unknown vaccine names found: {set(df['Міжнародна непатентована назва'].unique())}"
 
     df = df[~df['Міжнародна непатентована назва'].isin(VACCINES_SKIPPED)]
 
@@ -223,7 +224,7 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
     Path.mkdir(MEDDATA_FOLDER, exist_ok=True,)
 
     # Update if the main dataset was downloaded more than 1 week ago
-    if refresh or \
+    if False or \
         not Path.exists(FACILITIES_STOCK_FILE) or \
         (dt.datetime.now() - dt.datetime.fromtimestamp(Path(FACILITIES_STOCK_FILE).stat().st_mtime)).days >= 7:
 
@@ -325,9 +326,11 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
     df['trade_name'] = df['trade_name'].str.replace(r'(?i)\w*Comirnaty.*\(child\)\w*', 'Pfizer (дитячий)', regex=True)
     df['trade_name'] = df['trade_name'].str.replace(r'(?i).*(?:Comirnaty|Pfizer)(?! \(дитяч\w+\)).*', 'Pfizer', regex=True)
     df.loc[df['series']=='HL8354', 'trade_name'] = 'Pfizer (дитячий)'
+    
+    df = df[df['series'].isin(['GA2988', 'GK0925', 'HJ3099','GC9425', 'HL8354'])]  # Specific series
 
     # Compute the amount of consumed vaccines for the last "pure" 6 months
-    month_period = 7
+    month_period = 7 # Last 6 months
     now = dt.datetime.now()
     start_date = dt.datetime(
         now.year + (now.month - month_period) // 12,
@@ -337,9 +340,7 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
     end_date = dt.datetime(now.year, now.month, 1) - dt.timedelta(days=1)
 
     usage = df[
-        df['series'].isin(['GA2988', 'GK0925', 'HJ3099','GC9425', 'HL8354'])  # Specific series
-        &
-        (df['accounting_date'].between(start_date, end_date))  # Last 6 months
+        df['accounting_date'].between(start_date, end_date)
     ].groupby([df['accounting_date'].dt.to_period('M'), 'region_order', 'trade_name'])[
         ['cons_quantity', 'broken']
     ].sum()
@@ -859,8 +860,12 @@ def compute_date_based_pivot_usage(pivot_usage: pd.DataFrame, REPORT_DATE: dt.da
 
 
 def compute_average_usage(usages: pd.DataFrame):
-    average_usage = usages[(dt.date.today() - usages['Дата'].dt.date) < dt.timedelta(days=365)].pivot_table(index='Регіон',
-                                                                                                            columns='Міжнародна непатентована назва', values='Використано доз за звітний місяць при проведенні щеплень', aggfunc='mean')
+    average_usage = usages[(dt.date.today() - usages['Дата'].dt.date) < dt.timedelta(days=365)]\
+    .pivot_table(index='Регіон',
+                 columns='Міжнародна непатентована назва', 
+                 values='Використано доз за звітний місяць при проведенні щеплень', 
+                 aggfunc='mean'
+    )
     average_usage.fillna(0, inplace=True)
     average_usage.loc['Україна'] = average_usage.sum(axis=0)
 

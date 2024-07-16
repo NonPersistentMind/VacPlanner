@@ -812,7 +812,7 @@ def get_usage(filepath: Path = DATA_FOLDER / "Auxillary" / "Використан
     if SPECIFIC_DATASOURCE == 'MedData':
         usages = _get_usage_meddata()
     else:
-        usages = pd.read_excel(DATA_FOLDER / "Auxillary" / "ВСЬОГО.xlsx",
+        usages = pd.read_excel(DATA_FOLDER / "Auxillary" / "ЗАЛИШКИ ТА АНАЛІЗ.xlsx",
                             engine='openpyxl', sheet_name='Використання')
 
     usages['Дата'] = pd.to_datetime(usages['Дата'])

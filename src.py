@@ -158,6 +158,7 @@ def _clean_data(df: pd.DataFrame) -> None:
         df = df[df['Регіон'].notna()]
 
     df = df.dropna(subset=['Регіон'])
+    df = df[df['Регіон'].isin(region_positions.keys())]
     df['Заклад'] = df['Заклад'].fillna('Невідомий заклад')
     df = df[df["Міжнародна непатентована назва"].notna()]
     df['Регіон'] = df['Регіон'].replace(

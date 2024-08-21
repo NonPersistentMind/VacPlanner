@@ -4,14 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-scipy = "*"
 pandas = "*"
 matplotlib = "*"
-openpyxl = "*"
 xlrd = "*"
-numpy = "*"
 requests = "*"
 seaborn = "*"
+ipykernel = "*"
+scipy = "*"
+openpyxl = "*"
+numpy = "*"
+packaging = "*"
 
 [dev-packages]
 

@@ -146,18 +146,16 @@ def _clean_data(df: pd.DataFrame) -> None:
     df.columns = df.columns.str.strip()
     df.rename(columns={'Серія препарту': 'Серія препарату'}, inplace=True)
 
-    # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
     df['Заклад'] = df['Заклад'].str.strip()
     df['Кількість доз'] = df['Кількість доз'].astype(int)
     df['Регіон'] = df['Регіон'].str.replace(' область', '')
     df['Регіон'] = df['Регіон'].str.replace(' обл.', '')
     df['Регіон'] = df['Регіон'].str.replace(' обл', '')
-    # df['Регіон'] = df['Регіон'].str.replace('', pd.NA)
+    # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
     if df['Регіон'].isna().any():
         debug(f"Found NaN values in 'Регіон' column. Skipping them.")
         df = df[df['Регіон'].notna()]
 
-    df = df.dropna(subset=['Регіон'])
     df = df[df['Регіон'].isin(region_positions.keys())]
     df['Заклад'] = df['Заклад'].fillna('Невідомий заклад')
     df = df[df["Міжнародна непатентована назва"].notna()]
@@ -179,6 +177,9 @@ def _clean_data(df: pd.DataFrame) -> None:
     _inverse_correction(df, 'Міжнародна непатентована назва',
                         'Серія препарату', new_label='Назва препарату')
     _inverse_correction(df, 'Заклад', 'код ЄДРПОУ', new_label='Назва закладу')
+    _inverse_correction(df, 'код ЄДРПОУ', 'Заклад', new_label='Код ЄДРПОУ')
+    _inverse_correction(df, 'Торгівельна назва', 'Серія препарату', new_label='temp')
+    _inverse_correction(df, 'Виробник', 'Серія препарату', new_label='temp')
     
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
         vaccine_shorts)

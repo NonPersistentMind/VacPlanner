@@ -5,15 +5,15 @@ name = "pypi"
 
 [packages]
 pandas = "*"
-matplotlib = "*"
 xlrd = "*"
 requests = "*"
 seaborn = "*"
-ipykernel = "*"
 scipy = "*"
 openpyxl = "*"
 numpy = "*"
 packaging = "*"
+matplotlib = "*"
+ipykernel = "*"
 
 [dev-packages]
 

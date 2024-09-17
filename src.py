@@ -177,10 +177,11 @@ def _clean_data(df: pd.DataFrame) -> None:
 
     _inverse_correction(df, 'Міжнародна непатентована назва',
                         'Серія препарату', new_label='Назва препарату')
-    _inverse_correction(df, 'Заклад', 'код ЄДРПОУ', new_label='Назва закладу')
-    _inverse_correction(df, 'код ЄДРПОУ', 'Заклад', new_label='Код ЄДРПОУ')
-    _inverse_correction(df, 'Торгівельна назва', 'Серія препарату', new_label='temp')
-    _inverse_correction(df, 'Виробник', 'Серія препарату', new_label='temp')
+    if SPECIFIC_DATASOURCE != 'MedData':
+        _inverse_correction(df, 'Заклад', 'код ЄДРПОУ', new_label='Назва закладу')
+        _inverse_correction(df, 'код ЄДРПОУ', 'Заклад', new_label='Код ЄДРПОУ')
+        _inverse_correction(df, 'Торгівельна назва', 'Серія препарату', new_label='temp')
+        _inverse_correction(df, 'Виробник', 'Серія препарату', new_label='temp')
     
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
         vaccine_shorts)
@@ -227,7 +228,7 @@ def _get_meddata(refresh=False) -> pd.DataFrame:
     Path.mkdir(MEDDATA_FOLDER, exist_ok=True,)
 
     # Update if the main dataset was downloaded more than 1 week ago
-    if False or \
+    if refresh or \
         not Path.exists(FACILITIES_STOCK_FILE) or \
         (dt.datetime.now() - dt.datetime.fromtimestamp(Path(FACILITIES_STOCK_FILE).stat().st_mtime)).days >= 7:
 

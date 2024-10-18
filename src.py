@@ -167,13 +167,12 @@ def _clean_data(df: pd.DataFrame) -> None:
         ['Держбюджет', 'Державний бюджет'], 'Державний бюджет (невідомий рік)')
     df['Джерело фінансування'] = df['Джерело фінансування'].replace('120', 'Гуманітарна допомога')
     
-    df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
-        {
-            '/Вакцина для профілактики сказу ': 'Сказ',
-            'Тетанус Гамма': 'Правець',
-        })
-    df = df[df['Міжнародна непатентована назва'] != 'Вакцини від COVID-19']
-    df = df[df['Міжнародна непатентована назва'] != 'Pfizer Omicron']
+    df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace({
+        '/Вакцина для профілактики сказу ': 'Сказ',
+        'Тетанус Гамма': 'Правець',
+    })
+    # df = df[df['Міжнародна непатентована назва'] != 'Вакцини від COVID-19']
+    # df = df[df['Міжнародна непатентована назва'] != 'Pfizer Omicron']
     # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
 
     _inverse_correction(df, 'Міжнародна непатентована назва',
@@ -186,9 +185,9 @@ def _clean_data(df: pd.DataFrame) -> None:
     
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
         vaccine_shorts)
-    if SPECIFIC_DATASOURCE != 'MedData':
-        assert set(df['Міжнародна непатентована назва'].unique()) <= set(vaccine_shorts.values()), f"Unknown vaccine names found: {set(df['Міжнародна непатентована назва'].unique())}"
-
+    if SPECIFIC_DATASOURCE != 'MedData' and not set(df['Міжнародна непатентована назва'].unique()) <= set(vaccine_shorts.values()):
+        log(f"Found unknown vaccine names: {set(df['Міжнародна непатентована назва'].unique()) - set(vaccine_shorts.values())}")
+    df = df[df["Міжнародна непатентована назва"].isin(vaccine_shorts.values())]
     df = df[~df['Міжнародна непатентована назва'].isin(VACCINES_SKIPPED)]
 
     df['дата оновлення'] = pd.to_datetime(df['дата оновлення'], dayfirst=True)
@@ -197,8 +196,7 @@ def _clean_data(df: pd.DataFrame) -> None:
 
     # Remove any data reporting vaccine with expiration date older than the latest report date
     REPORT_DATE = _assume_report_date(df)
-    df.loc[df['дата оновлення'].isna(), 'дата оновлення'] = REPORT_DATE - \
-        dt.timedelta(days=14)
+    df.loc[df['дата оновлення'].isna(), 'дата оновлення'] = REPORT_DATE - dt.timedelta(days=14)
     timed_outs = df[(REPORT_DATE - df['дата оновлення'])
                     > dt.timedelta(days=7)]
     df = df[df['Термін придатності'] > REPORT_DATE]
@@ -817,8 +815,13 @@ def get_usage(filepath: Path = DATA_FOLDER / "Auxillary" / "Використан
     if SPECIFIC_DATASOURCE == 'MedData':
         usages = _get_usage_meddata()
     else:
-        usages = pd.read_excel(DATA_FOLDER / "Auxillary" / "ЗАЛИШКИ ТА АНАЛІЗ.xlsx",
-                            engine='openpyxl', sheet_name='Використання')
+        usages = pd.read_excel(
+            DATA_FOLDER / "Auxillary" / "ЗАЛИШКИ ТА АНАЛІЗ.xlsx",
+            engine='openpyxl', sheet_name='Використання'
+        )
+        # URL = "https://docs.google.com/spreadsheets/d/1qZOq42-xh8l5kAR4_afltyG0gPif600S/edit?gid=185542289#gid=185542289"
+        # URL = URL.replace('/edit#gid=', '/export?format=csv&gid=')
+        # usages = pd.read_csv(URL)
 
     usages['Дата'] = pd.to_datetime(usages['Дата'])
     usages['Міжнародна непатентована назва'] = usages['Міжнародна непатентована назва'].replace(

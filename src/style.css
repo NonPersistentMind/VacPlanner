@@ -255,8 +255,8 @@ section {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 0;
-    width: 10vmin;
-    height: 10vmin;
+    width: 130px;
+    height: 130px;
     border-radius: 50%;
     opacity: 1;
     transition: all 0.5s ease-in-out;

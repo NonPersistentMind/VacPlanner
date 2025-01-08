@@ -1,5 +1,6 @@
+import asyncio
 from src import (
-    get_data,
+    get_data_v2,
     get_usage,
     compute_region_with_foundsource_df, 
     compute_region_df, 
@@ -22,7 +23,7 @@ from src import (
 from config import SPECIFIC_DATASOURCE
 
 if __name__ == '__main__':
-    df, REPORT_DATE, timed_outs, national_leftovers = get_data(refresh=True)
+    df, REPORT_DATE, timed_outs, national_leftovers = asyncio.run(get_data_v2(refresh=True))
     
     debug(df["Регіон"].unique())
     
@@ -85,7 +86,7 @@ if __name__ == '__main__':
         institutional_level_data_df,
         average_usage,
         mean_trends, 
-        date_based_pivot_usage, 
+        date_based_pivot_usage,
         compute_future_supplies_export(compute_future_supplies(national_leftovers), extended=True),
         waning_expiration_based_timelines,
         vaccines_expected_to_expire,

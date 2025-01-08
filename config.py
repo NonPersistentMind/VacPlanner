@@ -4,8 +4,8 @@ import datetime as dt, logging, sys
 SPECIFIC_VACCINE_SHORTCUTS_FILE = None # None for default filesource. Path string if you want to use a specific file source
 
 # None for default filesource. Path string if you want to use a specific file source
-SPECIFIC_DATASOURCE = "https://docs.google.com/spreadsheets/d/1koUddJooo_5mQAssJKISCSXJGEIhIxfrWGRpzwYIZ1o/edit#gid=1511936617" 
-# SPECIFIC_DATASOURCE = "MedData"
+# SPECIFIC_DATASOURCE = "https://docs.google.com/spreadsheets/d/1koUddJooo_5mQAssJKISCSXJGEIhIxfrWGRpzwYIZ1o/edit#gid=1511936617" 
+SPECIFIC_DATASOURCE = "MedData Routine"
 
 # None for default filesource. Path string if you want to use a specific file source
 SPECIFIC_NATIONAL_STOCK_FILE = 'https://docs.google.com/spreadsheets/d/1SHkdgBo4KEdVYnG3IYzQDIwwK3CnaCVZf8KZ6JFa5t4/edit#gid=0' 
@@ -14,6 +14,8 @@ SPECIFIC_NATIONAL_STOCK_FILE = 'https://docs.google.com/spreadsheets/d/1SHkdgBo4
 RESULTS_FOLDER = Path('./Results/')
 DATA_FOLDER = Path('./Data/')
 SOURCE_FOLDER = Path('./SourceFiles/')
+HISTORICAL_DATA_FOLDER = DATA_FOLDER / 'Historical Data/'
+
 LOGGING_FOLDER = Path('./Logs/')
 warnings_file = LOGGING_FOLDER / 'warnings.log'
 logging_file = LOGGING_FOLDER / 'Main.log'

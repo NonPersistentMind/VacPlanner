@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import re
 import datetime as dt
-import scipy
+import aiohttp
 import typing as t
 import logging
 import warnings
@@ -14,6 +14,7 @@ import requests as rq
 import pandas as pd
 from pathlib import Path
 from matplotlib import pyplot as plt
+from dataschemas import *
 plt.style.use('fivethirtyeight')
 
 
@@ -175,9 +176,8 @@ def _clean_data(df: pd.DataFrame) -> None:
     # df = df[df['Міжнародна непатентована назва'] != 'Pfizer Omicron']
     # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
 
-    _inverse_correction(df, 'Міжнародна непатентована назва',
-                        'Серія препарату', new_label='Назва препарату')
-    if SPECIFIC_DATASOURCE != 'MedData':
+    _inverse_correction(df, DS.vacname, DS.vacseries, new_label='Назва препарату')
+    if not SPECIFIC_DATASOURCE.startswith('MedData'):
         _inverse_correction(df, 'Заклад', 'код ЄДРПОУ', new_label='Назва закладу')
         _inverse_correction(df, 'код ЄДРПОУ', 'Заклад', new_label='Код ЄДРПОУ')
         _inverse_correction(df, 'Торгівельна назва', 'Серія препарату', new_label='temp')
@@ -190,19 +190,19 @@ def _clean_data(df: pd.DataFrame) -> None:
     df = df[df["Міжнародна непатентована назва"].isin(vaccine_shorts.values())]
     df = df[~df['Міжнародна непатентована назва'].isin(VACCINES_SKIPPED)]
 
-    df['дата оновлення'] = pd.to_datetime(df['дата оновлення'], dayfirst=True)
-    df['Термін придатності'] = pd.to_datetime(
-        df['Термін придатності'], dayfirst=True)
+    df[DS.upd_date] = pd.to_datetime(df[DS.upd_date], dayfirst=SPECIFIC_DATASOURCE != 'MedData Routine')
+    df[DS.exp_date] = pd.to_datetime(df[DS.exp_date], errors="raise", dayfirst=SPECIFIC_DATASOURCE != 'MedData Routine')
 
     # Remove any data reporting vaccine with expiration date older than the latest report date
     REPORT_DATE = _assume_report_date(df)
-    df.loc[df['дата оновлення'].isna(), 'дата оновлення'] = REPORT_DATE - dt.timedelta(days=14)
-    timed_outs = df[(REPORT_DATE - df['дата оновлення'])
-                    > dt.timedelta(days=7)]
-    df = df[df['Термін придатності'] > REPORT_DATE]
-
-    df['Термін придатності'] = df['Термін придатності'].dt.date
-
+    df.loc[df[DS.upd_date].isna(), DS.upd_date] = REPORT_DATE - dt.timedelta(days=14)
+    
+    # Remove any records that were updated more than 7 days ago. Save them for further analysis
+    timed_outs = df[(REPORT_DATE - df[DS.upd_date]) > dt.timedelta(days=7)]
+    df = df[df[DS.exp_date] > REPORT_DATE]
+    
+    df.loc[:, DS.exp_date] = df[DS.exp_date].dt.date
+    
     return df, REPORT_DATE.date(), timed_outs
 
 
@@ -472,6 +472,133 @@ def get_data(
     return df, REPORT_DATE, timed_outs, national_leftovers_df
 
 
+async def get_meddata(mode: t.Literal["routine", "covid"]) -> pd.DataFrame:
+    if mode == "routine":
+        URL = "https://vaccination.meddata.com.ua/index.php?option=com_fabrik\
+               &task=meddata.api&method=get_balance_by_regions&format=raw"
+    elif mode == "covid":
+        raise NotImplementedError("Covid data is not available yet")
+    else:
+        raise ValueError("Mode should be either 'routine' or 'covid'")
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(URL) as response:
+            if response.status == 200 and response.content_type == 'application/json':
+                data = await response.json()
+            else:
+                log(f"Error: Received response with status {response.status} and content type {response.content_type}")
+    
+    df = pd.DataFrame(data["data"]["vaccines"])
+    
+    df = df.rename(columns={
+        'short_name': DS.vacname,
+        'region': DS.region,
+        'zoz_name': DS.facility,
+        'edrpou': DS.edrpou,
+        'series': DS.vacseries,
+        'expire_date': DS.exp_date,
+        'expire_date_defrosting': DS.defrost_exp_date,
+        'accounting_date': DS.upd_date,
+        'balance_quantity': DS.doses,
+        'quarantine_amount': DS.quarantined_doses,
+        'utilization_amount': DS.utilized_doses,
+        'manufacturer': DS.manufacturer,
+        'source': DS.fundsource,
+        'latitude': DS.latitude,
+        'longitude': DS.longitude,
+    })
+    
+    return df
+    
+
+
+async def get_data_v2(
+        refresh: bool = False,
+        autosave: bool = True,
+        national_stock_filepath: Path = DATA_FOLDER/'Auxiliary'/'Залишки нацрівня.xlsx',
+    ) -> tuple[pd.DataFrame, dt.date, pd.DataFrame, pd.DataFrame]:    
+    # Ensure updates on specific dates
+    filedate = dt.date.today()
+    if filedate.day < 6:
+        filedate = dt.date(filedate.year, filedate.month - 1, 21)
+    elif filedate.day < 21:
+        filedate = dt.date(filedate.year, filedate.month, 6)
+    else:
+        filedate = dt.date(filedate.year, filedate.month, 21)
+    
+    log(f"Starting to process {filedate}")
+    
+    history_dir = HISTORICAL_DATA_FOLDER / f'{filedate.year}-{filedate.month:02d}-{filedate.day:02d}'
+    if not refresh and Path.exists(history_dir):
+        df = pd.read_parquet(history_dir / 'rawdata.parquet.gzip')
+        timed_outs = pd.read_parquet(history_dir / 'timedouts.parquet.gzip')
+        national_stock = pd.read_parquet(history_dir / 'national_stock.parquet.gzip')
+        REPORT_DATE = _assume_report_date(df).date()
+        
+        log(f"Found cached data. {REPORT_DATE} is the file's report date.")
+        return df, REPORT_DATE, timed_outs, national_stock
+
+    log(f"{filedate=} not found in cache. Fetching data...")
+    
+    match SPECIFIC_DATASOURCE:
+        case None:
+            filepath = get_latest_file(DATA_FOLDER)
+            filedate = get_filename_date(filepath.stem)
+            async def fetch_data():
+                return pd.read_excel(
+                    filepath,
+                    sheet_name='Залишки поточні',
+                    dtype={' код ЄДРПОУ': str},
+                    engine='openpyxl'
+                )
+        case str(filepath) if (SPECIFIC_DATASOURCE.startswith('http') and ("/edit#gid=" in SPECIFIC_DATASOURCE)):
+            filepath = filepath.replace('/edit#gid=', '/export?format=csv&gid=')
+            async def fetch_data():
+                return pd.read_csv(filepath)
+        case "MedData Routine":
+            async def fetch_data():
+                return await get_meddata(mode="routine")
+        case "MedData Covid":
+            async def fetch_data():
+                return await get_meddata(mode="covid")
+    
+    df = await fetch_data()
+    log(f"Data fetched. Cleaning and processing...")
+    df, REPORT_DATE, timed_outs = _clean_data(df)
+    log(f"Data cleaned. {REPORT_DATE} is the file's report date.")
+    
+    legacy_national_stock = get_national_leftovers(national_stock_filepath, refresh=refresh)
+    
+    if SPECIFIC_DATASOURCE != "MedData Routine":
+        national_stock = legacy_national_stock
+        df = pd.concat(
+            [df, national_stock[national_stock['Дата поставки'].isna()][[
+                DS.vacname, DS.region, DS.exp_date, 
+                DS.doses, DS.fundsource
+            ]]],
+            ignore_index=True
+        )
+    else:
+        national_stock = legacy_national_stock
+        # national_stock = df[df[DS.facility].str.contains("ЦКПХ")]
+        # national_stock = pd.concat(
+        #     [national_stock, legacy_national_stock[legacy_national_stock["Дата поставки"].notna()]],
+        #     ignore_index=True
+        # )
+
+    log(f"Saving data...")
+    if autosave:
+        Path.mkdir(DATA_FOLDER / 'Historical Data', exist_ok=True, parents=True)
+        Path.mkdir(history_dir, exist_ok=True, parents=True)
+        
+        df.to_parquet(history_dir / 'rawdata.parquet.gzip', compression='gzip')
+        timed_outs.to_parquet(history_dir / 'timedouts.parquet.gzip', compression='gzip')
+        national_stock.to_parquet(history_dir / 'national_stock.parquet.gzip', compression='gzip')
+    
+    log(f"Data saved. Retrieval complete.")
+    return df, REPORT_DATE, timed_outs, national_stock
+
+
 def _get_national_stock_meddata() -> pd.DataFrame:
     rp = rq.get('https://vaccine.meddata.com.ua/index.php?option=com_fabrik&task=meddata.safemed&method=vaccines_national&format=raw')
     nat_stock = pd.DataFrame(rp.json()['data'])
@@ -501,53 +628,97 @@ def _get_national_stock_meddata() -> pd.DataFrame:
     return nat_stock
 
 
+# def get_national_leftovers(
+#         filepath: Path = DATA_FOLDER/'Auxillary'/'Залишки нацрівня.xlsx', 
+#         custom_processor: t.Callable[(...), pd.DataFrame] | None = None,
+#         refresh: bool = False
+#     ) -> pd.DataFrame:
+#     # Find the date of the most recent monday (the day the data is usually updated)
+#     today = dt.date.today()
+#     recent_monday = today - dt.timedelta(days=today.weekday())
+#     URL = False
+#     FROM_MEDDATA = SPECIFIC_NATIONAL_STOCK_FILE == 'MedData'
+    
+#     # Check if the specific source is a URL
+#     if SPECIFIC_NATIONAL_STOCK_FILE.startswith('http://') or SPECIFIC_NATIONAL_STOCK_FILE.startswith('https://'):
+#         URL = SPECIFIC_NATIONAL_STOCK_FILE.replace(
+#             '/edit#gid=', '/export?format=csv&gid=')
+#     if not Path.exists(DATA_FOLDER / f"/Auxillary/Залишки нацрівня {recent_monday}.pkl"):
+#         if URL:
+#             log(f"Reading national leftovers from {URL}")
+#             national_leftovers_df = pd.read_csv(URL)
+#         elif FROM_MEDDATA:
+#             log(f"Reading national leftovers from MedData")
+#             national_leftovers_df = _get_national_stock_meddata()
+#         else:
+#             log(f"Reading national leftovers from {filepath}")
+#             national_leftovers_df = pd.read_excel(
+#                 filepath, sheet_name='Залишки і поставки')
+            
+#         national_leftovers_df = national_leftovers_df.rename(
+#             columns={'Вакцина': 'Міжнародна непатентована назва', 'Залишок': 'Кількість доз'})
+#         national_leftovers_df['Міжнародна непатентована назва'] = national_leftovers_df['Міжнародна непатентована назва'].replace(
+#             'Хіб', 'ХІБ')
+#         national_leftovers_df['Регіон'] = 'Україна'
+#         national_leftovers_df['Термін придатності'] = pd.to_datetime(
+#             national_leftovers_df['Термін придатності'], format="%d.%m.%Y").dt.date
+#         national_leftovers_df['Дата поставки'] = pd.to_datetime(
+#             national_leftovers_df['Дата поставки'], format="%d.%m.%Y").dt.date
+
+#         national_leftovers_df.to_pickle(
+#             DATA_FOLDER / f"Auxillary/Залишки нацрівня {recent_monday}.pkl")
+#     else:
+#         debug(
+#             f"Reading national leftovers from {DATA_FOLDER}/Auxillary/Залишки нацрівня {recent_monday}.pkl")
+#         national_leftovers_df = pd.read_pickle(
+#             f"{DATA_FOLDER}/Auxillary/Залишки нацрівня {recent_monday}.pkl")
+#     return national_leftovers_df
+
+
 def get_national_leftovers(
-    filepath: Path = DATA_FOLDER/'Auxillary'/'Залишки нацрівня.xlsx', 
-    custom_processor: t.Callable[(...), pd.DataFrame] | None = None) -> pd.DataFrame:
+    filepath: Path = DATA_FOLDER/'Auxiliary'/'Залишки нацрівня.xlsx', 
+    custom_processor: t.Callable[(...), pd.DataFrame] | None = None,
+    refresh: bool = False
+) -> pd.DataFrame:
+    URL = None
+    HISTORICAL_NATIONAL_STOCK_FOLDER = DATA_FOLDER / "Historical Data"
     # Find the date of the most recent monday (the day the data is usually updated)
     today = dt.date.today()
     recent_monday = today - dt.timedelta(days=today.weekday())
-    URL = False
-    FROM_MEDDATA = SPECIFIC_NATIONAL_STOCK_FILE == 'MedData'
-    
+
     # Check if the specific source is a URL
     if SPECIFIC_NATIONAL_STOCK_FILE.startswith('http://') or SPECIFIC_NATIONAL_STOCK_FILE.startswith('https://'):
-        URL = SPECIFIC_NATIONAL_STOCK_FILE.replace(
-            '/edit#gid=', '/export?format=csv&gid=')
-    if not Path.exists(DATA_FOLDER / f"/Auxillary/Залишки нацрівня {recent_monday}.pkl"):
-        if URL:
-            log(f"Reading national leftovers from {URL}")
-            national_leftovers_df = pd.read_csv(URL)
-        elif FROM_MEDDATA:
-            log(f"Reading national leftovers from MedData")
-            national_leftovers_df = _get_national_stock_meddata()
-        else:
-            log(f"Reading national leftovers from {filepath}")
-            national_leftovers_df = pd.read_excel(
-                filepath, sheet_name='Залишки і поставки')
-            
-        national_leftovers_df = national_leftovers_df.rename(
-            columns={'Вакцина': 'Міжнародна непатентована назва', 'Залишок': 'Кількість доз'})
-        national_leftovers_df['Міжнародна непатентована назва'] = national_leftovers_df['Міжнародна непатентована назва'].replace(
-            'Хіб', 'ХІБ')
-        national_leftovers_df['Регіон'] = 'Україна'
-        national_leftovers_df['Термін придатності'] = pd.to_datetime(
-            national_leftovers_df['Термін придатності'], format="%d.%m.%Y").dt.date
-        national_leftovers_df['Дата поставки'] = pd.to_datetime(
-            national_leftovers_df['Дата поставки'], format="%d.%m.%Y").dt.date
+        URL = SPECIFIC_NATIONAL_STOCK_FILE.replace('/edit#gid=', '/export?format=csv&gid=')
 
-        national_leftovers_df.to_pickle(
-            DATA_FOLDER / f"Auxillary/Залишки нацрівня {recent_monday}.pkl")
+
+    if refresh or not Path.exists(HISTORICAL_NATIONAL_STOCK_FOLDER / f"Залишки нацрівня {recent_monday}.pkl"):
+        if URL:
+            debug(f"Reading national leftovers from {URL}")
+            national_leftovers_df = pd.read_csv(URL)
+        else:
+            debug(f"Reading national leftovers from {filepath}")
+            national_leftovers_df = pd.read_excel(filepath, sheet_name='Залишки і поставки')
+                    
+        national_leftovers_df = national_leftovers_df.rename(columns={'Вакцина': DS.vacname, 'Залишок': DS.doses})
+        national_leftovers_df[DS.vacname] = national_leftovers_df[DS.vacname].replace('Хіб', 'ХІБ')
+        national_leftovers_df[DS.region] = 'Україна'
+        national_leftovers_df[DS.exp_date] = pd.to_datetime(national_leftovers_df[DS.exp_date], format="%d.%m.%Y").dt.date 
+        national_leftovers_df['Дата поставки'] = pd.to_datetime(national_leftovers_df['Дата поставки'], format="%d.%m.%Y").dt.date 
+        
+        national_leftovers_df.to_pickle(HISTORICAL_NATIONAL_STOCK_FOLDER / f"{recent_monday}.pkl")
     else:
-        debug(
-            f"Reading national leftovers from {DATA_FOLDER}/Auxillary/Залишки нацрівня {recent_monday}.pkl")
-        national_leftovers_df = pd.read_pickle(
-            f"{DATA_FOLDER}/Auxillary/Залишки нацрівня {recent_monday}.pkl")
-    return national_leftovers_df
+        debug(f'Reading national leftovers from {HISTORICAL_NATIONAL_STOCK_FOLDER / f"Залишки нацрівня {recent_monday}.pkl"}')
+        national_leftovers_df = pd.read_pickle(HISTORICAL_NATIONAL_STOCK_FOLDER / f"Залишки нацрівня {recent_monday}.pkl")
+        
+    return national_leftovers_df[
+        (national_leftovers_df["Дата поставки"].isna()) | 
+        (national_leftovers_df["Дата поставки"] >= dt.date.today())
+    ]
 
 
 def get_nationalStock_with_storage():
     national_stock = get_national_leftovers()
+    national_stock = national_stock[national_stock['Дата поставки'].isna()]
     national_stock = national_stock.rename(
         columns={'Коментар': 'Місце зберігання'})
     return national_stock[[
@@ -569,8 +740,9 @@ def get_nationalStock_with_storage():
 
 
 def compute_future_supplies(national_leftovers_df: pd.DataFrame) -> pd.DataFrame:
-    future_supplies_data = national_leftovers_df[national_leftovers_df['Дата поставки'].notna(
-    )]
+    future_supplies_data = national_leftovers_df[national_leftovers_df['Дата поставки'].notna()]
+    future_supplies_data["Міжнародна непатентована назва"] = future_supplies_data["Міжнародна непатентована назва"].ffill()
+    future_supplies_data["Дата поставки"] = pd.to_datetime(future_supplies_data["Дата поставки"], format="%d.%m.%Y")
     if SKIP_FUTURE_SUPPLIES:
         future_supplies_data.loc[:, 'Кількість доз'] = 0
 
@@ -601,7 +773,7 @@ def compute_future_supplies_export(future_supplies_data: pd.DataFrame, extended=
 
 
 def compute_timed_outs_report(timed_outs: pd.DataFrame) -> pd.DataFrame:
-    return timed_outs.groupby('Регіон')[['Кількість доз', 'Заклад']].apply(lambda group: [group['Кількість доз'].sum(), group['Заклад'].unique()]).sort_values(ascending=False)
+    return timed_outs.groupby('Регіон')[['Кількість доз', 'Заклад']].apply(lambda group: [group['Кількість доз'].sum(), group['Заклад'].unique()]).sort_values(by="Кількість доз", ascending=False)
 
 
 def compute_region_with_foundsource_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -687,8 +859,7 @@ def compute_expiration_timelines(
     # Separately for Ukraine as a whole
     regional_expirations = pd.DataFrame()
     for vaccine, vaccine_data in df.groupby('Міжнародна непатентована назва'):
-        vaccine_data = vaccine_data.groupby('Термін придатності')[
-            ['Кількість доз']].sum()
+        vaccine_data = vaccine_data.groupby('Термін придатності')[['Кількість доз']].sum()
 
         vaccine_data.rename(columns={'Кількість доз': vaccine}, inplace=True)
         regional_expirations = pd.concat(
@@ -700,10 +871,13 @@ def compute_expiration_timelines(
         future_supplies_data['Кількість доз'] = 0
 
     for index, data in future_supplies_data.groupby(['Дата поставки', 'Міжнародна непатентована назва', ]):
+        if index[1] not in regional_expirations.columns:
+            continue
         # Add future supplies as a separate column in the expiration timelines
         regional_expirations.loc[index[0], index[1] +
                                  SUPPLY_SUFFIX] = data['Кількість доз'].sum()
 
+        data["Термін придатності"] = pd.to_datetime(data["Термін придатності"], format="%d.%m.%Y")
         for expiration_date, doses in data.groupby('Термін придатності', dropna=False)['Кількість доз']:
             if pd.isna(expiration_date):
                 expiration_date = index[0] + DEFAULT_SHELF_LIFE
@@ -717,6 +891,7 @@ def compute_expiration_timelines(
         lambda x: x.endswith(SUPPLY_SUFFIX))
 
     regional_expirations.fillna(0, inplace=True)
+    regional_expirations.index = pd.to_datetime(regional_expirations.index)
     regional_expirations.sort_index(inplace=True)
 
     expiration_timelines["Україна"] = regional_expirations

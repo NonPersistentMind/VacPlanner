@@ -109,8 +109,8 @@ def get_latest_file(DATA_FOLDER: str | Path) -> Path:
     return LATEST_FILE
 
 
-def _assume_report_date(df: pd.DataFrame) -> pd.Timestamp:
-    return df['дата оновлення'].max().to_pydatetime()
+def _assume_report_date(df: pd.DataFrame) -> dt.date:
+    return df['дата оновлення'].max()
 
 
 def _inverse_correction(df: pd.DataFrame, target: str, based_on: str, new_label: str = None, method: str = "popular", verbose: bool = False) -> None:
@@ -190,8 +190,8 @@ def _clean_data(df: pd.DataFrame) -> None:
     df = df[df["Міжнародна непатентована назва"].isin(vaccine_shorts.values())]
     df = df[~df['Міжнародна непатентована назва'].isin(VACCINES_SKIPPED)]
 
-    df[DS.upd_date] = pd.to_datetime(df[DS.upd_date], dayfirst=SPECIFIC_DATASOURCE != 'MedData Routine')
-    df[DS.exp_date] = pd.to_datetime(df[DS.exp_date], errors="raise", dayfirst=SPECIFIC_DATASOURCE != 'MedData Routine')
+    df[DS.upd_date] = pd.to_datetime(df[DS.upd_date], dayfirst=SPECIFIC_DATASOURCE != 'MedData Routine').dt.date
+    df[DS.exp_date] = pd.to_datetime(df[DS.exp_date], errors="raise", dayfirst=SPECIFIC_DATASOURCE != 'MedData Routine').dt.date
 
     # Remove any data reporting vaccine with expiration date older than the latest report date
     REPORT_DATE = _assume_report_date(df)
@@ -201,9 +201,9 @@ def _clean_data(df: pd.DataFrame) -> None:
     timed_outs = df[(REPORT_DATE - df[DS.upd_date]) > dt.timedelta(days=7)]
     df = df[df[DS.exp_date] > REPORT_DATE]
     
-    df.loc[:, DS.exp_date] = df[DS.exp_date].dt.date
+    df.loc[:, DS.exp_date] = df[DS.exp_date]
     
-    return df, REPORT_DATE.date(), timed_outs
+    return df, REPORT_DATE, timed_outs
 
 
 def _get_meddata(refresh=False) -> pd.DataFrame:
@@ -742,7 +742,10 @@ def get_nationalStock_with_storage():
 def compute_future_supplies(national_leftovers_df: pd.DataFrame) -> pd.DataFrame:
     future_supplies_data = national_leftovers_df[national_leftovers_df['Дата поставки'].notna()]
     future_supplies_data["Міжнародна непатентована назва"] = future_supplies_data["Міжнародна непатентована назва"].ffill()
-    future_supplies_data["Дата поставки"] = pd.to_datetime(future_supplies_data["Дата поставки"], format="%d.%m.%Y")
+    
+    future_supplies_data["Дата поставки"] = pd.to_datetime(future_supplies_data["Дата поставки"], format="%d.%m.%Y").dt.date
+    future_supplies_data["Термін придатності"] = pd.to_datetime(future_supplies_data["Термін придатності"], format="%d.%m.%Y").dt.date
+    
     if SKIP_FUTURE_SUPPLIES:
         future_supplies_data.loc[:, 'Кількість доз'] = 0
 
@@ -864,6 +867,9 @@ def compute_expiration_timelines(
         vaccine_data.rename(columns={'Кількість доз': vaccine}, inplace=True)
         regional_expirations = pd.concat(
             [regional_expirations, vaccine_data], axis=1)
+    
+    regional_expirations.fillna(0, inplace=True)
+    regional_expirations.sort_index(inplace=True)
 
     # Add future supplies to the Ukrainian expiration timelines
     future_supplies_data = compute_future_supplies(national_leftovers_df)
@@ -871,13 +877,13 @@ def compute_expiration_timelines(
         future_supplies_data['Кількість доз'] = 0
 
     for index, data in future_supplies_data.groupby(['Дата поставки', 'Міжнародна непатентована назва', ]):
-        if index[1] not in regional_expirations.columns:
-            continue
+        # if index[1] not in regional_expirations.columns:
+        #     continue
         # Add future supplies as a separate column in the expiration timelines
         regional_expirations.loc[index[0], index[1] +
                                  SUPPLY_SUFFIX] = data['Кількість доз'].sum()
 
-        data["Термін придатності"] = pd.to_datetime(data["Термін придатності"], format="%d.%m.%Y")
+        # data["Термін придатності"] = pd.to_datetime(data["Термін придатності"], format="%d.%m.%Y")
         for expiration_date, doses in data.groupby('Термін придатності', dropna=False)['Кількість доз']:
             if pd.isna(expiration_date):
                 expiration_date = index[0] + DEFAULT_SHELF_LIFE
@@ -891,7 +897,7 @@ def compute_expiration_timelines(
         lambda x: x.endswith(SUPPLY_SUFFIX))
 
     regional_expirations.fillna(0, inplace=True)
-    regional_expirations.index = pd.to_datetime(regional_expirations.index)
+    # regional_expirations.index = pd.to_datetime(regional_expirations.index)
     regional_expirations.sort_index(inplace=True)
 
     expiration_timelines["Україна"] = regional_expirations

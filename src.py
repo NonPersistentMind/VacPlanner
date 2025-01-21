@@ -533,7 +533,7 @@ async def get_data_v2(
         df = pd.read_parquet(history_dir / 'rawdata.parquet.gzip')
         timed_outs = pd.read_parquet(history_dir / 'timedouts.parquet.gzip')
         national_stock = pd.read_parquet(history_dir / 'national_stock.parquet.gzip')
-        REPORT_DATE = _assume_report_date(df).date()
+        REPORT_DATE = _assume_report_date(df)
         
         log(f"Found cached data. {REPORT_DATE} is the file's report date.")
         return df, REPORT_DATE, timed_outs, national_stock
@@ -1048,8 +1048,8 @@ def compute_date_based_pivot_usage(pivot_usage: pd.DataFrame, REPORT_DATE: dt.da
     return date_based_pivot_usage
 
 
-def compute_average_usage(usages: pd.DataFrame):
-    average_usage = usages[(dt.date.today() - usages['Дата'].dt.date) < dt.timedelta(days=365)]\
+def compute_average_usage(usages: pd.DataFrame, months: int = 12) -> pd.DataFrame:
+    average_usage = usages[(dt.date.today() - usages['Дата'].dt.date) < dt.timedelta(days=months * 31)]\
     .pivot_table(index='Регіон',
                  columns='Міжнародна непатентована назва', 
                  values='Використано доз за звітний місяць при проведенні щеплень', 
@@ -1234,6 +1234,7 @@ def accumulate(
     vaccines_left_sorted: pd.DataFrame,
     institutional_level_data_df: pd.DataFrame,
     average_usage: pd.DataFrame,
+    semiannual_usage: pd.DataFrame,
     mean_trends: pd.DataFrame,
     date_based_pivot_usage: pd.DataFrame,
     future_supplies_export: pd.DataFrame,
@@ -1316,6 +1317,7 @@ def accumulate(
             json.dumps(expiration_timelines, default=lambda obj: pd.DataFrame.to_json(
                 obj, orient='split', force_ascii=False)),
             average_usage.to_json(orient='index', force_ascii=False),
+            semiannual_usage.to_json(orient='index', force_ascii=False),
             json.dumps(date_based_pivot_usage, ensure_ascii=False),
             mean_trends.to_json(orient='index', force_ascii=False),
             json.dumps(future_supplies_export),

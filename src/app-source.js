@@ -1212,6 +1212,7 @@ class LeftoversUsageExpirationComponent extends React.Component {
         let vaccinesExpectedToExpire = /*{}*/;
         let expirationTimelines = /*{}*/;
         let averageUsage = /*{}*/;
+        let semiannualUsage = /*{}*/;
         let detailedUsage = /*{}*/;
         let usageTrends = /*{}*/;
         let futureSupplies = /*{}*/;
@@ -1230,6 +1231,7 @@ class LeftoversUsageExpirationComponent extends React.Component {
             dataWithExpirations,
             dataWithUsage: this.props.dataWithUsage,
             averageUsage,
+            semiannualUsage,
             detailedUsage,
             usageTrends,
             vaccinesExpectedToExpire,
@@ -1276,6 +1278,7 @@ class LeftoversUsageExpirationComponent extends React.Component {
                     expirations={this.state.vaccinesExpectedToExpire}
                     expirationTimelines={this.state.expirationTimelines}
                     averageUsage={this.state.averageUsage}
+                    semiannualUsage={this.state.semiannualUsage}
                     detailedUsage={this.state.detailedUsage}
                     usageTrends={this.state.usageTrends}
                     noFutureSuppliesForecast={this.state.noFutureSuppliesForecast}
@@ -1874,6 +1877,7 @@ class LeftoversUsageExpirationInfographicsSectionComponent extends React.Compone
                                     addNewChart={this.props.addNewChart}
 
                                     averageUsage={this.props.averageUsage[this.props.selectedRegion]}
+                                    semiannualUsage={this.props.semiannualUsage[this.props.selectedRegion]}
                                     detailedUsage={this.props.detailedUsage[this.props.selectedRegion]}
 
                                     defaultOption={defaultOption}
@@ -2798,6 +2802,8 @@ class UsageBarChartComponent extends React.Component {
     onChartInitialized = (chart) => {
         let usage = this.props.detailedUsage;
         let averageUsage = this.props.averageUsage;
+        let semiannualUsage = this.props.semiannualUsage;
+
         this.chart = chart;
         
         let series = [];
@@ -2810,6 +2816,7 @@ class UsageBarChartComponent extends React.Component {
 
         Object.keys(seriesData).forEach((vaccine, i) => {
             seriesData[vaccine].push(Math.round(averageUsage[vaccine]));
+            seriesData[vaccine].push(Math.round(semiannualUsage[vaccine]));
             series.push({
                 name: vaccine,
                 type: 'bar',
@@ -3021,6 +3028,7 @@ class UsageBarChartComponent extends React.Component {
         const intl = this.context;
         let usage = this.props.detailedUsage;
         let averageUsage = this.props.averageUsage;
+        let semiannualUsage = this.props.semiannualUsage;
         let series = [];
         let seriesData = {};
         Object.keys(usage).forEach((date, i) => {
@@ -3032,6 +3040,7 @@ class UsageBarChartComponent extends React.Component {
         Object.keys(seriesData).forEach((vaccine, i) => {
             // let vaccine_translated = intl.formatMessage({id:`direct-translation.${vaccine}`, defaultMessage:vaccine});
             seriesData[vaccine].push(Math.round(averageUsage[vaccine]));
+            seriesData[vaccine].push(Math.round(semiannualUsage[vaccine]));
             series.push({
                 data: seriesData[vaccine],
                 name: vaccine
@@ -3046,10 +3055,15 @@ class UsageBarChartComponent extends React.Component {
                 data: (Object.keys(usage).map((date)=>{
                     return intl.formatMessage({id: `direct-translation.${monthMapping[Number(date.slice(5,7))]}`, defaultMessage:monthMapping[Number(date.slice(5,7))]}) + ' ' + date.slice(0, 4);
                 
-                })).concat(intl.formatMessage({
+                }))
+                .concat(intl.formatMessage({
                     id: "leftovers.infographics.no-usage.usageBarChart.averaged-usage-bar", 
                     defaultMessage:"Усереднене\n({n_months} міс)"
-                }, {n_months: REPORT_TYPE === "Routine" ? 12 : 6})),
+                }, {n_months: REPORT_TYPE === "Routine" ? 12 : 6}))
+                .concat(intl.formatMessage({
+                    id: "leftovers.infographics.no-usage.usageBarChart.averaged-usage-bar", 
+                    defaultMessage:"Усереднене\n({n_months} міс)"
+                }, {n_months: 6})),
             },
             legend: {
                 formatter: (el) => intl.formatMessage({id:`direct-translation.${el}`, defaultMessage:el})

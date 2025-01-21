@@ -23,7 +23,7 @@ from src import (
 from config import SPECIFIC_DATASOURCE
 
 if __name__ == '__main__':
-    df, REPORT_DATE, timed_outs, national_leftovers = asyncio.run(get_data_v2(refresh=True))
+    df, REPORT_DATE, timed_outs, national_leftovers = asyncio.run(get_data_v2(refresh=False))
     
     debug(df["Регіон"].unique())
     
@@ -43,6 +43,11 @@ if __name__ == '__main__':
     usages = get_usage()
     pivot_usage = compute_pivot_usage(usages, vaccines_tracked=expiration_timelines['Україна'].columns)
     average_usage = compute_average_usage(usages)
+    semiannual_usage = compute_average_usage(usages, months=6)
+    
+    mixed_usage = average_usage.copy()
+    mixed_usage["АДП-М"] = semiannual_usage["АДП-М"]
+    
     date_based_pivot_usage = compute_date_based_pivot_usage(pivot_usage, REPORT_DATE)
     log(f"Usage preparation done. Starting to compute expiration forecasts")
     
@@ -54,7 +59,7 @@ if __name__ == '__main__':
     usage_based_expiration_timelines, vaccines_expected_to_expire, ukraine_based_expiration = compute_usage_based_expiration_timelines(
         df,
         waning_expiration_based_timelines,
-        average_usage,
+        mixed_usage,
         expiration_timelines,
         REPORT_DATE,
         PICK_SUPPLIES_MASK,
@@ -63,7 +68,7 @@ if __name__ == '__main__':
     no_future_supplies_usage_based_expiration_timelines_for_ukraine, _, _ = compute_usage_based_expiration_timelines(
         df,
         no_future_supplies_ukrainian_waning_expiration_based_timelines,
-        average_usage,
+        mixed_usage,
         no_future_supplies_ukrainian_expiration_timelines,
         REPORT_DATE,
         PICK_SUPPLIES_MASK,
@@ -85,6 +90,7 @@ if __name__ == '__main__':
         compute_vaccines_left_sorted(region_df),
         institutional_level_data_df,
         average_usage,
+        semiannual_usage,
         mean_trends, 
         date_based_pivot_usage,
         compute_future_supplies_export(compute_future_supplies(national_leftovers), extended=True),

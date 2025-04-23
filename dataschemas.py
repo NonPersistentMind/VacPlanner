@@ -31,12 +31,13 @@ class NS:
     """
     National Stock
     """
-    vacname = DS.vacname, 
-    region = DS.region, 
-    doses = DS.doses, 
-    storage_place = 'Місце зберігання',
+    vacname = DS.vacname
+    region = DS.region
+    doses = DS.doses
+    storage_place = 'Місце зберігання'
     fundsource = DS.fundsource
     supply_date = 'Дата поставки'
+    exp_date = DS.exp_date
     responsible = 'Відповідальний за імпорт'
     
     def __iter__(self):

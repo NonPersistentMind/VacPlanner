@@ -1,5 +1,5 @@
 from pathlib import Path
-import datetime as dt, logging, sys
+import datetime as dt, logging
 
 SPECIFIC_VACCINE_SHORTCUTS_FILE = None # None for default filesource. Path string if you want to use a specific file source
 

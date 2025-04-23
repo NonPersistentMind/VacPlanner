@@ -123,7 +123,6 @@ export default function NationalStockChartComponent({nationalStock, selectedFilt
         chart.setOption(option);
         addNewChart(chart);
 
-
         return () => {
             chart.dispose();
         }
@@ -142,7 +141,7 @@ export default function NationalStockChartComponent({nationalStock, selectedFilt
         
         // regionalStock is a dictionary of the form { 'Регіон': .., 'Джерело фінансування': .., 'Міжнародна непатентована назва': .. , 'Кількість': .. }
         let data = nationalStock['Регіон'].reduce((acc, region, i) => {
-            // Filter out all the data that does not correspond to the selected found sources 
+            // Filter out all the data that does not correspond to the selected fund sources
             if (selectedFundSources.includes(nationalStock['Джерело фінансування'][i])) {
                 let vaccine = nationalStock['Міжнародна непатентована назва'][i];
                 if (!acc[region]) {

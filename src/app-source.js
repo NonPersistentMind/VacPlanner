@@ -49,6 +49,8 @@ class RegionalChartSectionComponent extends React.Component {
         const data = /*{}*/;
         const nationalStock = /*{}*/;
 
+        console.log(nationalStock);
+
         this.state = {
             regionalStockData: data['Регіон'].reduce((acc, region, i) => {
                 if (region != 'Україна') {

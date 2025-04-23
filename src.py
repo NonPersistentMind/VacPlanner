@@ -175,6 +175,7 @@ def _clean_data(df: pd.DataFrame) -> None:
     # df = df[df['Міжнародна непатентована назва'] != 'Вакцини від COVID-19']
     # df = df[df['Міжнародна непатентована назва'] != 'Pfizer Omicron']
     # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
+    df.drop(columns=['quarantines'], inplace=True)
 
     _inverse_correction(df, DS.vacname, DS.vacseries, new_label='Назва препарату')
     if not SPECIFIC_DATASOURCE.startswith('MedData'):
@@ -202,6 +203,7 @@ def _clean_data(df: pd.DataFrame) -> None:
     df = df[df[DS.exp_date] > REPORT_DATE]
     
     df.loc[:, DS.exp_date] = df[DS.exp_date]
+    
     
     return df, REPORT_DATE, timed_outs
 
@@ -567,10 +569,10 @@ async def get_data_v2(
     df, REPORT_DATE, timed_outs = _clean_data(df)
     log(f"Data cleaned. {REPORT_DATE} is the file's report date.")
     
-    legacy_national_stock = get_national_leftovers(national_stock_filepath, refresh=refresh)
+    legacy_stock = get_national_leftovers(national_stock_filepath, refresh=refresh)
     
     if SPECIFIC_DATASOURCE != "MedData Routine":
-        national_stock = legacy_national_stock
+        national_stock = legacy_stock
         df = pd.concat(
             [df, national_stock[national_stock['Дата поставки'].isna()][[
                 DS.vacname, DS.region, DS.exp_date, 
@@ -579,22 +581,36 @@ async def get_data_v2(
             ignore_index=True
         )
     else:
-        national_stock = legacy_national_stock
-        # national_stock = df[df[DS.facility].str.contains("ЦКПХ")]
-        # national_stock = pd.concat(
-        #     [national_stock, legacy_national_stock[legacy_national_stock["Дата поставки"].notna()]],
-        #     ignore_index=True
-        # )
+        future_supplies = legacy_stock.rename(columns={'Коментар': NS.storage_place})
+        future_supplies = future_supplies[future_supplies[NS.supply_date].notna()]
+        
+        df = df[df[NS.region] != '']
+        national_stock = df[df[NS.region] == ''].copy()
+        national_stock["Регіон"] = "Україна"
+
+        national_stock = national_stock[national_stock[NS.doses] > 0]
+        national_stock = national_stock.rename(columns={"Заклад": NS.storage_place})
+        national_stock = national_stock[[NS.vacname, NS.region, NS.exp_date, NS.doses, NS.storage_place, NS.fundsource]]
+        national_stock[NS.supply_date] = pd.NA
+        national_stock[NS.responsible] = pd.NA
+        
+        national_stock = pd.concat([national_stock, future_supplies], ignore_index=True)
+        
+        national_stock[NS.storage_place] = national_stock[NS.storage_place].replace({
+            r'(?i).*укрвакцина.*': 'Укрвакцина',
+            r'(?i).*фармасофт.*': 'ФармаСофт',
+            r'(?i).*фармація.*': 'Фармація',
+        }, regex=True)
 
     log(f"Saving data...")
     if autosave:
         Path.mkdir(DATA_FOLDER / 'Historical Data', exist_ok=True, parents=True)
         Path.mkdir(history_dir, exist_ok=True, parents=True)
-        
+
         df.to_parquet(history_dir / 'rawdata.parquet.gzip', compression='gzip')
         timed_outs.to_parquet(history_dir / 'timedouts.parquet.gzip', compression='gzip')
         national_stock.to_parquet(history_dir / 'national_stock.parquet.gzip', compression='gzip')
-    
+
     log(f"Data saved. Retrieval complete.")
     return df, REPORT_DATE, timed_outs, national_stock
 
@@ -1000,11 +1016,9 @@ def get_usage(filepath: Path = DATA_FOLDER / "Auxillary" / "Використан
             DATA_FOLDER / "Auxillary" / "ЗАЛИШКИ ТА АНАЛІЗ.xlsx",
             engine='openpyxl', sheet_name='Використання'
         )
-        # URL = "https://docs.google.com/spreadsheets/d/1qZOq42-xh8l5kAR4_afltyG0gPif600S/edit?gid=185542289#gid=185542289"
-        # URL = URL.replace('/edit#gid=', '/export?format=csv&gid=')
-        # usages = pd.read_csv(URL)
 
     usages['Дата'] = pd.to_datetime(usages['Дата'])
+    # usages = usages[usages['Дата'] < dt.datetime(2025, 2, 1)]
     usages['Міжнародна непатентована назва'] = usages['Міжнародна непатентована назва'].replace(
         vaccine_shorts)
     usages['Регіон'] = usages['Регіон'].replace("Київ", "м. Київ")

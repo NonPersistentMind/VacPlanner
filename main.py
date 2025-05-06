@@ -1,7 +1,9 @@
 import asyncio
+import pandas as pd
 from src import (
+    get_meddata_usage,
     get_data_v2,
-    get_usage,
+    get_phc_usage,
     compute_region_with_foundsource_df, 
     compute_region_df, 
     compute_vaccines_left_sorted,
@@ -23,7 +25,7 @@ from src import (
 from config import SPECIFIC_DATASOURCE
 
 if __name__ == '__main__':
-    df, REPORT_DATE, timed_outs, national_leftovers = asyncio.run(get_data_v2(refresh=False))
+    df, REPORT_DATE, timed_outs, national_leftovers = asyncio.run(get_data_v2(refresh=True))
     
     debug(df["Регіон"].unique())
     
@@ -40,7 +42,10 @@ if __name__ == '__main__':
     no_future_supplies_ukrainian_expiration_timelines, _ = compute_expiration_timelines(df, national_leftovers, include_future_supplies=False, specific_regions=['Україна'])
     debug(no_future_supplies_ukrainian_expiration_timelines)
     
-    usages = get_usage()
+    phc_usage = get_phc_usage()
+    meddata_usage = asyncio.run(get_meddata_usage())
+    usages = pd.concat([phc_usage, meddata_usage], ignore_index=True)
+    
     pivot_usage = compute_pivot_usage(usages, vaccines_tracked=expiration_timelines['Україна'].columns)
     average_usage = compute_average_usage(usages)
     semiannual_usage = compute_average_usage(usages, months=6)
@@ -104,6 +109,5 @@ if __name__ == '__main__':
     
     # Call webpack to bundle the frontend
     import subprocess
-    subprocess.run(['./node_modules/.bin/webpack'])
-    
+    subprocess.run(['./node_modules/.bin/webpack', '--mode=production'])
     

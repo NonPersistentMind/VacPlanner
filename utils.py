@@ -1,6 +1,4 @@
-from pathlib import Path
-from scipy.spatial import ConvexHull
-import json, logging
+import json
 from config import SOURCE_FOLDER
 
 ALL_SLICE = slice(None)
@@ -23,21 +21,22 @@ vaccineColors = [
             '#80DED9'
         ]
 
-ukraine_map_json = json.load(open(SOURCE_FOLDER / 'ukraine-regions.json', 'r', encoding='utf-8'))
-# ukraine_map_json['features'][0]['properties']['name'] = 'Україна'
-for i in range(1, len(ukraine_map_json['features'])):
-    name = ukraine_map_json['features'][i]['properties']['NL_NAME_1']
-    name = name if name != 'Київ' else 'м. Київ'
-    name = name if name != "NA" else "Львівська"
-    name = name if "Дон" not in name else "Донецька"
-    name = name if "Дніпро" not in name else "Дніпропетровська"
+# ukraine_map_json = json.load(open(SOURCE_FOLDER / 'ukraine-regions.json', 'r', encoding='utf-8'))
+# # ukraine_map_json['features'][0]['properties']['name'] = 'Україна'
+# for i in range(1, len(ukraine_map_json['features'])):
+#     name = ukraine_map_json['features'][i]['properties']['NL_NAME_1']
+#     name = name if name != 'Київ' else 'м. Київ'
+#     name = name if name != "NA" else "Львівська"
+#     name = name if "Дон" not in name else "Донецька"
+#     name = name if "Дніпро" not in name else "Дніпропетровська"
     
-    ukraine_map_json['features'][i]['properties']['name'] = name
+#     ukraine_map_json['features'][i]['properties']['name'] = name
     
-kyiv_coords = ukraine_map_json['features'][0]['geometry']['coordinates'][0][0] + [feature for feature in ukraine_map_json['features'] if feature['properties'].get('name', None) == 'м. Київ'][0]['geometry']['coordinates'][0][0]
-kyiv_coords = ConvexHull(kyiv_coords).points.tolist()
-[feature for feature in ukraine_map_json['features'] if feature['properties'].get('name', None) == 'м. Київ'][0]['geometry']['coordinates'][0][0] = kyiv_coords
-ukraine_map_json['features'] = ukraine_map_json['features'][1:]
+# kyiv_coords = ukraine_map_json['features'][0]['geometry']['coordinates'][0][0] + [feature for feature in ukraine_map_json['features'] if feature['properties'].get('name', None) == 'м. Київ'][0]['geometry']['coordinates'][0][0]
+# kyiv_coords = ConvexHull(kyiv_coords).points.tolist()
+# [feature for feature in ukraine_map_json['features'] if feature['properties'].get('name', None) == 'м. Київ'][0]['geometry']['coordinates'][0][0] = kyiv_coords
+# ukraine_map_json['features'] = ukraine_map_json['features'][1:]
+
 # disease_vaccine_dict = {
 #     "Дифтерія": [vaccine for vaccine in vaccines if "дифтерії" in vaccine],
 #     "Правець": [vaccine for vaccine in vaccines if "правця" in vaccine],
@@ -51,6 +50,7 @@ ukraine_map_json['features'] = ukraine_map_json['features'][1:]
 #     "Сказ": [vaccine for vaccine in vaccines if "сказу" in vaccine],
 #     "Туберкульоз": [vaccine for vaccine in vaccines if "туберкульозу" in vaccine],
 # }
+ukraine_map_json = json.load(open(SOURCE_FOLDER / 'ukraine-regions.json', 'r', encoding='utf-8'))
 
 
 vaccine_shorts = {vaccine.split(' – ')[0]: vaccine.split(' – ')[1] for vaccine in [

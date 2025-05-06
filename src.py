@@ -147,43 +147,45 @@ def _clean_data(df: pd.DataFrame) -> None:
     df.columns = df.columns.str.strip()
     df.rename(columns={'Серія препарту': 'Серія препарату'}, inplace=True)
 
+    df[DS.edrpou] = df[DS.edrpou].str.replace("\u200b", "")
     df['Заклад'] = df['Заклад'].str.strip()
     df['Кількість доз'] = df['Кількість доз'].astype(int)
     df['Регіон'] = df['Регіон'].str.replace(' область', '')
     df['Регіон'] = df['Регіон'].str.replace(' обл.', '')
     df['Регіон'] = df['Регіон'].str.replace(' обл', '')
     # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
-    if df['Регіон'].isna().any():
-        debug(f"Found NaN values in 'Регіон' column. Skipping them.")
-        df = df[df['Регіон'].notna()]
+    df.loc[df[DS.doses] < 0, DS.doses] = 0
+    # if df['Регіон'].isna().any():
+    #     debug(f"Found NaN values in 'Регіон' column. Skipping them.")
+    #     df = df[df['Регіон'].notna()]
 
-    df = df[df['Регіон'].isin(region_positions.keys())]
-    df['Заклад'] = df['Заклад'].fillna('Невідомий заклад')
-    df = df[df["Міжнародна непатентована назва"].notna()]
-    df['Регіон'] = df['Регіон'].replace(
-        'чЕРНІГІВСЬКА ОБЛАСТЬ', 'Чернігівська область')
-    df['Джерело фінансування'] = df['Джерело фінансування'].fillna(
-        'Невідоме джерело')
-    df['Джерело фінансування'] = df['Джерело фінансування'].replace(
-        ['Держбюджет', 'Державний бюджет'], 'Державний бюджет (невідомий рік)')
-    df['Джерело фінансування'] = df['Джерело фінансування'].replace('120', 'Гуманітарна допомога')
+    # df = df[df['Регіон'].isin(region_positions.keys())]
+    # df['Заклад'] = df['Заклад'].fillna('Невідомий заклад')
+    # df = df[df["Міжнародна непатентована назва"].notna()]
+    # df['Регіон'] = df['Регіон'].replace(
+    #     'чЕРНІГІВСЬКА ОБЛАСТЬ', 'Чернігівська область')
+    # df['Джерело фінансування'] = df['Джерело фінансування'].fillna(
+    #     'Невідоме джерело')
+    # df['Джерело фінансування'] = df['Джерело фінансування'].replace(
+    #     ['Держбюджет', 'Державний бюджет'], 'Державний бюджет (невідомий рік)')
+    # df['Джерело фінансування'] = df['Джерело фінансування'].replace('120', 'Гуманітарна допомога')
     
-    df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace({
-        '/Вакцина для профілактики сказу ': 'Сказ',
-        'Тетанус Гамма': 'Правець',
-    })
+    # df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace({
+    #     '/Вакцина для профілактики сказу ': 'Сказ',
+    #     'Тетанус Гамма': 'Правець',
+    # })
     # df = df[df['Міжнародна непатентована назва'] != 'Вакцини від COVID-19']
     # df = df[df['Міжнародна непатентована назва'] != 'Pfizer Omicron']
     # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
     df.drop(columns=['quarantines'], inplace=True)
-
+        
     _inverse_correction(df, DS.vacname, DS.vacseries, new_label='Назва препарату')
     if not SPECIFIC_DATASOURCE.startswith('MedData'):
         _inverse_correction(df, 'Заклад', 'код ЄДРПОУ', new_label='Назва закладу')
         _inverse_correction(df, 'код ЄДРПОУ', 'Заклад', new_label='Код ЄДРПОУ')
         _inverse_correction(df, 'Торгівельна назва', 'Серія препарату', new_label='temp')
         _inverse_correction(df, 'Виробник', 'Серія препарату', new_label='temp')
-    
+
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
         vaccine_shorts)
     if SPECIFIC_DATASOURCE != 'MedData' and not set(df['Міжнародна непатентована назва'].unique()) <= set(vaccine_shorts.values()):
@@ -203,7 +205,6 @@ def _clean_data(df: pd.DataFrame) -> None:
     df = df[df[DS.exp_date] > REPORT_DATE]
     
     df.loc[:, DS.exp_date] = df[DS.exp_date]
-    
     
     return df, REPORT_DATE, timed_outs
 
@@ -491,6 +492,8 @@ async def get_meddata(mode: t.Literal["routine", "covid"]) -> pd.DataFrame:
                 log(f"Error: Received response with status {response.status} and content type {response.content_type}")
     
     df = pd.DataFrame(data["data"]["vaccines"])
+    
+    df.loc[df["region"] == "", "region"] = "Україна"
     
     df = df.rename(columns={
         'short_name': DS.vacname,
@@ -792,7 +795,7 @@ def compute_future_supplies_export(future_supplies_data: pd.DataFrame, extended=
 
 
 def compute_timed_outs_report(timed_outs: pd.DataFrame) -> pd.DataFrame:
-    return timed_outs.groupby('Регіон')[['Кількість доз', 'Заклад']].apply(lambda group: [group['Кількість доз'].sum(), group['Заклад'].unique()]).sort_values(by="Кількість доз", ascending=False)
+    return timed_outs.groupby('Регіон')[['Кількість доз', 'Заклад']].apply(lambda group: [group['Кількість доз'].sum(), group['Заклад'].unique()]).sort_values(ascending=False)
 
 
 def compute_region_with_foundsource_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -1001,28 +1004,120 @@ def compute_waning_expiration_based_timelines(
     return waning_expiration_based_timelines
 
 
-def _get_usage_meddata() -> pd.DataFrame:
-    usage = pd.read_csv(DATA_FOLDER / 'MedData' / 'Usage.csv', sep=';')
-    return usage
+async def get_meddata_usage() -> pd.DataFrame:
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://vaccination.meddata.com.ua/index.php?\
+                                option=com_fabrik&task=meddata.api&\
+                                method=get_zoz_monthly_cons_broken&format=raw") as response:
+            usage = await response.json()
+
+    usage_df = pd.DataFrame(usage["data"]["vaccines"])
+    usage_df['edrpou'] = usage_df['edrpou'].apply(
+        lambda value: value.replace('\u200b', '') if isinstance(value, str) else value
+    )
+    # usage_df['edrpou_ch'] = usage_df['edrpou'].str.split('_')
+    # usage_df['edrpou_new'] = usage_df['edrpou_ch'].str[0]
+    
+    VACCINE_TRANSLATION = {
+        'IPV': 'ІПВ',
+        'BCG': 'БЦЖ',
+        'DT': 'АДП',
+        'Rabies': 'Сказ',
+        'Td': 'АДП-М',
+        'DTwP': 'АКДП',
+        'TT': 'АКДП',
+        'bOPV': 'ОПВ',
+        'MMR': 'КПК',
+        'DTwPHibHepB': 'Пента',
+        'HIB': 'ХІБ',
+        'Influenza': 'ХІБ',
+        'HepB': 'ГепВ'
+    }
+    
+    usage_df['vaccine_code'] = usage_df['vaccine_code'].replace(VACCINE_TRANSLATION)
+
+    usage_df.rename(columns={
+        'zoz_name': 'Заклад',
+        'edrpou': 'код ЄДРПОУ',
+        # 'edrpou_ch': 'вторрине_ЄДРПОУ',
+        'cons': 'Кількість доз',
+        'broken': 'Розлив',
+        'short_name': 'Торгівельна назва',
+        'vaccine_code': 'Міжнародна непатентована назва',
+        'manufacturer': 'Виробник',
+        'series': 'Серія препарату',
+        'accounting_period': 'Дата',
+        'region': 'Регіон'
+    }, inplace=True)
+
+    usage_df['Дата'] = pd.to_datetime(usage_df['Дата'])
+    usage_df = usage_df[usage_df["Дата"] >= dt.datetime(2025, 1, 1)]
+
+    usage_df: pd.DataFrame
+    usage_df = usage_df.groupby(["Регіон", "Міжнародна непатентована назва", "Дата"]).agg({
+        "Кількість доз": "sum",
+        "Розлив": "sum",
+    }).reset_index()
+
+    usage_df = usage_df.rename(columns={
+        "Кількість доз": "Кількість зроблених у звітному місяці щеплень",
+        "Розлив": "Розлив",
+    })
+
+    usage_df["Використано доз за звітний місяць при проведенні щеплень"] = usage_df["Кількість зроблених у звітному місяці щеплень"] + usage_df["Розлив"]
+
+    usage_df.drop(columns=["Розлив"], inplace=True)
+    
+    # usage_df['Заклад'] = usage_df['zoz_name']
+    # usage_df['код ЄДРПОУ'] = usage_df['edrpou']
+    # # usage_df['вторрине_ЄДРПОУ'] = usage_df['edrpou_ch'].str[1]
+    # usage_df['Кількість доз'] = usage_df['cons']
+    # usage_df['Розлив'] = usage_df['broken']
+    # usage_df['Торгівельна назва'] = usage_df['short_name']
+    # usage_df['Міжнародна непатентована назва'] = usage_df['vaccine_code']
+    
+    # usage_df['Виробник'] = usage_df['manufacturer']
+    # usage_df['Серія препарату'] = usage_df['series']
+    # usage_df['Місяць використання'] = usage_df['accounting_period']
+    # usage_df.drop(columns=['edrpou', 'edrpou_ch', 'edrpou_new', 'zoz_name', 'short_name', 'vaccine_code', 'manufacturer', 'series', 'accounting_period', 'cons', 'broken'], inplace=True)
+    # usage_df.drop(columns=['edrpou', 'zoz_name', 'short_name', 'vaccine_code', 'manufacturer', 'series', 'accounting_period', 'cons', 'broken'], inplace=True)
+
+    # usage_df = usage_df.groupby()
+
+    return usage_df
 
 
-def get_usage(filepath: Path = DATA_FOLDER / "Auxillary" / "Використання.csv") -> pd.DataFrame:
+def get_phc_usage(filepath: Path = DATA_FOLDER / "Auxillary" / "Використання.csv") -> pd.DataFrame:
     # usages = pd.read_csv(filepath)
     log(f"Starting to prepare usage data.")
-    if SPECIFIC_DATASOURCE == 'MedData':
-        usages = _get_usage_meddata()
-    else:
-        usages = pd.read_excel(
-            DATA_FOLDER / "Auxillary" / "ЗАЛИШКИ ТА АНАЛІЗ.xlsx",
-            engine='openpyxl', sheet_name='Використання'
-        )
 
-    usages['Дата'] = pd.to_datetime(usages['Дата'])
+    phc_usage = pd.read_excel(
+        DATA_FOLDER / "Auxillary" / "ЗАЛИШКИ ТА АНАЛІЗ.xlsx",
+        engine='openpyxl', sheet_name='Використання'
+    )
+    # phc_usage = phc_usage[phc_usage["Місяць використання"] < dt.date(2025, 1, 1)]    
+
+    phc_usage['Дата'] = pd.to_datetime(phc_usage['Дата'])
     # usages = usages[usages['Дата'] < dt.datetime(2025, 2, 1)]
-    usages['Міжнародна непатентована назва'] = usages['Міжнародна непатентована назва'].replace(
+    phc_usage['Міжнародна непатентована назва'] = phc_usage['Міжнародна непатентована назва'].replace(
         vaccine_shorts)
-    usages['Регіон'] = usages['Регіон'].replace("Київ", "м. Київ")
-    return usages
+    phc_usage['Регіон'] = phc_usage['Регіон'].replace("Київ", "м. Київ")
+    
+    phc_usage.drop(columns=["розлив"], inplace=True)
+    
+    phc_usage.rename(columns={
+        'Кількість  зроблених  у звітному місяці щеплень': 'Кількість зроблених у звітному місяці щеплень',
+    }, inplace=True)
+    
+    phc_usage = phc_usage[[
+        'Дата', 'Регіон', 'Міжнародна непатентована назва',
+        'Кількість зроблених у звітному місяці щеплень',
+        'Використано доз за звітний місяць при проведенні щеплень'
+    ]]
+    
+    phc_usage = phc_usage[phc_usage['Дата'] < dt.datetime(2025, 1, 1)]
+    
+    return phc_usage
 
 
 def compute_pivot_usage(usages: pd.DataFrame, vaccines_tracked: t.Iterable) -> pd.DataFrame:
@@ -1238,6 +1333,50 @@ def compute_usage_based_expiration_timelines(
 
 def _has_index(lst, index):
     return -len(lst) <= index < len(lst)
+
+async def get_facilities_usage():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://vaccination.meddata.com.ua/index.php?\
+                                option=com_fabrik&task=meddata.api&\
+                                method=get_zoz_monthly_cons_broken&format=raw") as response:
+            usage = await response.json()
+
+    usage_df = pd.DataFrame(usage["data"]["vaccines"])
+    usage_df['edrpou'] = usage_df['edrpou'].apply(
+        lambda value: value.replace('\u200b', '') if isinstance(value, str) else value
+    )
+    usage_df['edrpou_ch'] = usage_df['edrpou'].str.split('_')
+    usage_df['edrpou_new'] = usage_df['edrpou_ch'].str[0]
+
+    usage_df['Заклад'] = usage_df['zoz_name']
+    usage_df['код ЄДРПОУ'] = usage_df['edrpou_new']
+    usage_df['вторрине_ЄДРПОУ'] = usage_df['edrpou_ch'].str[1]
+    usage_df['Кількість доз'] = usage_df['cons']
+    usage_df['Розлив'] = usage_df['broken']
+    usage_df['Торгівельна назва'] = usage_df['short_name']
+    usage_df['Міжнародна непатентована назва'] = usage_df['vaccine_code']
+    vaccine_mapping = {
+        'IPV': 'ІПВ',
+        'BCG': 'БЦЖ',
+        'DT': 'АДП',
+        'Rabies': 'Сказ',
+        'Td': 'АДП-М',
+        'DTwP': 'АКДП',
+        'TT': 'АКДП',
+        'bOPV': 'ОПВ',
+        'MMR': 'КПК',
+        'DTwPHibHepB': 'Пента',
+        'HIB': 'ХІБ',
+        'Influenza': 'ХІБ',
+        'HepB': 'ГепВ'
+    }
+    usage_df['Міжнародна непатентована назва'] = usage_df['Міжнародна непатентована назва'].replace(vaccine_mapping)
+    usage_df['Виробник'] = usage_df['manufacturer']
+    usage_df['Серія препарату'] = usage_df['series']
+    usage_df['Місяць використання'] = usage_df['accounting_period']
+    usage_df.drop(columns=['edrpou', 'edrpou_ch', 'edrpou_new', 'zoz_name', 'short_name','vaccine_code','manufacturer','series','accounting_period', 'cons', 'broken'], inplace=True)
+
+    return usage_df
 
 def accumulate(
     REPORT_DATE: dt.date,

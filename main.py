@@ -89,6 +89,7 @@ if __name__ == '__main__':
     accumulate(
         REPORT_DATE,
         df,
+        national_leftovers,
         region_with_foundsource_df,
         timed_out_reports,
         region_df,

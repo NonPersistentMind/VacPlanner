@@ -587,9 +587,8 @@ async def get_data_v2(
         future_supplies = legacy_stock.rename(columns={'Коментар': NS.storage_place})
         future_supplies = future_supplies[future_supplies[NS.supply_date].notna()]
         
-        df = df[df[NS.region] != '']
-        national_stock = df[df[NS.region] == ''].copy()
-        national_stock["Регіон"] = "Україна"
+        national_stock = df[df[NS.region] == 'Україна'].copy()
+        df = df[df[NS.region] != 'Україна']
 
         national_stock = national_stock[national_stock[NS.doses] > 0]
         national_stock = national_stock.rename(columns={"Заклад": NS.storage_place})
@@ -600,7 +599,7 @@ async def get_data_v2(
         national_stock = pd.concat([national_stock, future_supplies], ignore_index=True)
         
         national_stock[NS.storage_place] = national_stock[NS.storage_place].replace({
-            r'(?i).*укрвакцина.*': 'Укрвакцина',
+            r'(?i).*укрвакцина.*': 'УВ',
             r'(?i).*фармасофт.*': 'ФармаСофт',
             r'(?i).*фармація.*': 'Фармація',
         }, regex=True)
@@ -1381,6 +1380,7 @@ async def get_facilities_usage():
 def accumulate(
     REPORT_DATE: dt.date,
     df: pd.DataFrame,
+    national_stock: pd.DataFrame,
     region_with_foundsource_df: pd.DataFrame,
     timed_out_reports: pd.DataFrame,
     region_df: pd.DataFrame,
@@ -1423,7 +1423,7 @@ def accumulate(
             # json.dumps(region_df.index.tolist(), ensure_ascii=False),
             json.dumps(region_with_foundsource_df.to_dict(
                 'list'), ensure_ascii=False),
-            get_nationalStock_with_storage().to_json(orient='columns', force_ascii=False),
+            national_stock[national_stock[NS.supply_date].isna()].to_json(orient='columns', force_ascii=False),
             # —————————————————————————————————— Regional Chart. SECTION 1 ———————————————————————————————————
             # ——————————————————————————————————— Regional HTML. SECTION 2 ———————————————————————————————————
             # Timed out stock reports

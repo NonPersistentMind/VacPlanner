@@ -54,6 +54,7 @@ ukraine_map_json = json.load(open(SOURCE_FOLDER / 'ukraine-regions.json', 'r', e
 
 
 vaccine_shorts = {vaccine.split(' – ')[0]: vaccine.split(' – ')[1] for vaccine in [
+    'Poliomyelitis Vaccine (oral) Bivalent type 1 and 3  – ОПВ',
     'Вакцина для профілактики поліомієліту (оральна) – ОПВ',
     'Вакцина для профілактики поліомієліту (інактивована) – ІПВ',
     'Вакцина для профілактики туберкульозу – БЦЖ',

@@ -111,4 +111,3 @@ if __name__ == '__main__':
     # Call webpack to bundle the frontend
     import subprocess
     subprocess.run(['./node_modules/.bin/webpack', '--mode=production'])
-    

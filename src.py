@@ -154,6 +154,7 @@ def _clean_data(df: pd.DataFrame) -> None:
     df['Регіон'] = df['Регіон'].str.replace(' обл.', '')
     df['Регіон'] = df['Регіон'].str.replace(' обл', '')
     # ————————————————————————————————————————————————————— Temporary Issuefixing Section —————————————————————————————————————————————————————
+    log(f"Found {(df[DS.doses] < 0).sum()} < 0 values in 'Кількість доз' column. Replacing them with 0.")
     df.loc[df[DS.doses] < 0, DS.doses] = 0
     # if df['Регіон'].isna().any():
     #     debug(f"Found NaN values in 'Регіон' column. Skipping them.")
@@ -186,10 +187,13 @@ def _clean_data(df: pd.DataFrame) -> None:
         _inverse_correction(df, 'Торгівельна назва', 'Серія препарату', new_label='temp')
         _inverse_correction(df, 'Виробник', 'Серія препарату', new_label='temp')
 
-    df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(
-        vaccine_shorts)
+    df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(vaccine_shorts)
+    
+    log(f"Unique vaccine names: {df['Міжнародна непатентована назва'].unique()}")
+
     if SPECIFIC_DATASOURCE != 'MedData' and not set(df['Міжнародна непатентована назва'].unique()) <= set(vaccine_shorts.values()):
         log(f"Found unknown vaccine names: {set(df['Міжнародна непатентована назва'].unique()) - set(vaccine_shorts.values())}")
+    
     df = df[df["Міжнародна непатентована назва"].isin(vaccine_shorts.values())]
     df = df[~df['Міжнародна непатентована назва'].isin(VACCINES_SKIPPED)]
 
@@ -1003,7 +1007,21 @@ def compute_waning_expiration_based_timelines(
     return waning_expiration_based_timelines
 
 
-async def get_meddata_usage() -> pd.DataFrame:
+async def get_meddata_usage(refresh: bool = False) -> pd.DataFrame:
+    filedate = dt.date.today()
+    
+    if filedate.day < 6:
+        filedate = dt.date(filedate.year, filedate.month - 1, 21)
+    elif filedate.day < 21:
+        filedate = dt.date(filedate.year, filedate.month, 6)
+    else:
+        filedate = dt.date(filedate.year, filedate.month, 21)
+    
+    history_dir = HISTORICAL_DATA_FOLDER / f'{filedate.year}-{filedate.month:02d}-{filedate.day:02d}'
+    if not refresh and Path.exists(history_dir / 'meddata_usage.parquet.gzip'):
+        log(f"Found cached usage data.")
+        return pd.read_parquet(history_dir / 'meddata_usage.parquet.gzip')
+    
     async with aiohttp.ClientSession() as session:
         async with session.get("https://vaccination.meddata.com.ua/index.php?\
                                 option=com_fabrik&task=meddata.api&\
@@ -1067,21 +1085,7 @@ async def get_meddata_usage() -> pd.DataFrame:
 
     usage_df.drop(columns=["Розлив"], inplace=True)
     
-    # usage_df['Заклад'] = usage_df['zoz_name']
-    # usage_df['код ЄДРПОУ'] = usage_df['edrpou']
-    # # usage_df['вторрине_ЄДРПОУ'] = usage_df['edrpou_ch'].str[1]
-    # usage_df['Кількість доз'] = usage_df['cons']
-    # usage_df['Розлив'] = usage_df['broken']
-    # usage_df['Торгівельна назва'] = usage_df['short_name']
-    # usage_df['Міжнародна непатентована назва'] = usage_df['vaccine_code']
-    
-    # usage_df['Виробник'] = usage_df['manufacturer']
-    # usage_df['Серія препарату'] = usage_df['series']
-    # usage_df['Місяць використання'] = usage_df['accounting_period']
-    # usage_df.drop(columns=['edrpou', 'edrpou_ch', 'edrpou_new', 'zoz_name', 'short_name', 'vaccine_code', 'manufacturer', 'series', 'accounting_period', 'cons', 'broken'], inplace=True)
-    # usage_df.drop(columns=['edrpou', 'zoz_name', 'short_name', 'vaccine_code', 'manufacturer', 'series', 'accounting_period', 'cons', 'broken'], inplace=True)
-
-    # usage_df = usage_df.groupby()
+    usage_df.to_parquet(history_dir / 'meddata_usage.parquet.gzip', compression='gzip')
 
     return usage_df
 

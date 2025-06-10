@@ -443,6 +443,7 @@ def get_data(
 
     savepath = DATA_FOLDER / 'Historical Data' / \
         f'{filedate["year"]}-{filedate["month"]}-{filedate["day"]}.pkl'
+    
     if refresh or not Path.exists(savepath):
         df = _get_meddata(refresh=refresh) if FROM_MEDDATA else \
             pd.read_csv(filepath) if URL else \
@@ -712,7 +713,6 @@ def get_national_leftovers(
     if SPECIFIC_NATIONAL_STOCK_FILE.startswith('http://') or SPECIFIC_NATIONAL_STOCK_FILE.startswith('https://'):
         URL = SPECIFIC_NATIONAL_STOCK_FILE.replace('/edit#gid=', '/export?format=csv&gid=')
 
-
     if refresh or not Path.exists(HISTORICAL_NATIONAL_STOCK_FOLDER / f"Залишки нацрівня {recent_monday}.pkl"):
         if URL:
             debug(f"Reading national leftovers from {URL}")
@@ -720,7 +720,11 @@ def get_national_leftovers(
         else:
             debug(f"Reading national leftovers from {filepath}")
             national_leftovers_df = pd.read_excel(filepath, sheet_name='Залишки і поставки')
-                    
+        
+        national_leftovers_df["Коментар"] = national_leftovers_df["Коментар"].fillna("")
+        national_leftovers_df["Джерело фінансування"] = national_leftovers_df["Джерело фінансування"].fillna("")
+        national_leftovers_df["Відповідальний за імпорт"] = national_leftovers_df["Відповідальний за імпорт"].fillna("")
+
         national_leftovers_df = national_leftovers_df.rename(columns={'Вакцина': DS.vacname, 'Залишок': DS.doses})
         national_leftovers_df[DS.vacname] = national_leftovers_df[DS.vacname].replace('Хіб', 'ХІБ')
         national_leftovers_df[DS.region] = 'Україна'

@@ -495,6 +495,7 @@ async def get_meddata(mode: t.Literal["routine", "covid"]) -> pd.DataFrame:
                 data = await response.json()
             else:
                 log(f"Error: Received response with status {response.status} and content type {response.content_type}")
+                raise ValueError("Failed to fetch data from MedData API")
     
     df = pd.DataFrame(data["data"]["vaccines"])
     

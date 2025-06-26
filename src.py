@@ -1074,6 +1074,7 @@ async def get_meddata_usage(refresh: bool = False) -> pd.DataFrame:
 
     usage_df['Дата'] = pd.to_datetime(usage_df['Дата'])
     usage_df = usage_df[usage_df["Дата"] >= dt.datetime(2025, 1, 1)]
+    usage_df = usage_df[usage_df["Дата"] < dt.datetime(filedate.year, filedate.month, 1)]
 
     usage_df: pd.DataFrame
     usage_df = usage_df.groupby(["Регіон", "Міжнародна непатентована назва", "Дата"]).agg({

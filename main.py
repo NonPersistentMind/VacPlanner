@@ -43,7 +43,7 @@ if __name__ == '__main__':
     debug(no_future_supplies_ukrainian_expiration_timelines)
     
     phc_usage = get_phc_usage()
-    meddata_usage = asyncio.run(get_meddata_usage())
+    meddata_usage = asyncio.run(get_meddata_usage(refresh=True))
     usages = pd.concat([phc_usage, meddata_usage], ignore_index=True)
     
     pivot_usage = compute_pivot_usage(usages, vaccines_tracked=expiration_timelines['Україна'].columns)

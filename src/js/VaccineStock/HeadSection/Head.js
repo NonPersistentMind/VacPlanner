@@ -35,7 +35,7 @@ export default class HeadSectionComponent extends React.Component {
                         </p>
                     </div>
                     {/*<img src="https://i.ibb.co/313XX6f/Designer-2.jpg" alt="Designer-2" border="0"/>*/}
-                    <img src="https://i.ibb.co/xDx1MrX/Designer.jpg" alt="Designer" border="0"/>
+                    <img src="https://i.ibb.co/MkM2Bw7C/Designer.jpg" alt="Designer" border="0"/>
                 </div>
             </section>
         )

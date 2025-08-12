@@ -189,13 +189,15 @@ def _clean_data(df: pd.DataFrame) -> None:
 
     df['Міжнародна непатентована назва'] = df['Міжнародна непатентована назва'].replace(vaccine_shorts)
     
-    log(f"Unique vaccine names: {df['Міжнародна непатентована назва'].unique()}")
+    log(f"Unique vaccine names (before filtering): {df['Міжнародна непатентована назва'].unique()}")
 
     if SPECIFIC_DATASOURCE != 'MedData' and not set(df['Міжнародна непатентована назва'].unique()) <= set(vaccine_shorts.values()):
         log(f"Found unknown vaccine names: {set(df['Міжнародна непатентована назва'].unique()) - set(vaccine_shorts.values())}")
     
     df = df[df["Міжнародна непатентована назва"].isin(vaccine_shorts.values())]
     df = df[~df['Міжнародна непатентована назва'].isin(VACCINES_SKIPPED)]
+
+    log(f"Unique vaccine names (after filtering): {df['Міжнародна непатентована назва'].unique()}")
 
     df[DS.upd_date] = pd.to_datetime(df[DS.upd_date], dayfirst=SPECIFIC_DATASOURCE != 'MedData Routine').dt.date
     df[DS.exp_date] = pd.to_datetime(df[DS.exp_date], errors="raise", dayfirst=SPECIFIC_DATASOURCE != 'MedData Routine').dt.date
@@ -803,7 +805,7 @@ def compute_future_supplies_export(future_supplies_data: pd.DataFrame, extended=
 
 
 def compute_timed_outs_report(timed_outs: pd.DataFrame) -> pd.DataFrame:
-    return timed_outs.groupby('Регіон')[['Кількість доз', 'Заклад']].apply(lambda group: [group['Кількість доз'].sum(), group['Заклад'].unique()]).sort_values(ascending=False)
+    return timed_outs.groupby('Регіон')[['Кількість доз', 'Заклад']].apply(lambda group: [group['Кількість доз'].sum(), group['Заклад'].unique()]).sort_values(by="Кількість доз", ascending=False)
 
 
 def compute_region_with_foundsource_df(df: pd.DataFrame) -> pd.DataFrame:
